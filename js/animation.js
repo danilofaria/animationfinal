@@ -17,12 +17,12 @@ materials.push( new THREE.MeshPhongMaterial( { map: earthTexture, bumpMap: earth
 materials.push( new THREE.MeshPhongMaterial( { map: mercuryTexture, bumpMap: mercuryTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 
 var two_ds_scene = new TwoDScene(3);
-two_ds_scene.setPosition(0, [-100,0,0]);
+two_ds_scene.setPosition(0, [0,0,0]);
 two_ds_scene.radii[0]=50;
 two_ds_scene.setM(0,331436);
 two_ds_scene.isFixed[0] = true;
 
-two_ds_scene.setPosition(1, [0,0,0]);
+two_ds_scene.setPosition(1, [100,0,0]);
 two_ds_scene.setVelocity(1, [0,0,62.8316]);
 two_ds_scene.radii[1]=20;
 two_ds_scene.setM(1,1);
@@ -30,7 +30,7 @@ two_ds_scene.isFixed[1] = false;
 var gravitational_force = new GravitationalForce(0,1,1.18419);
 two_ds_scene.insertForce(gravitational_force);
 
-two_ds_scene.setPosition(2, [0,0,0]);
+two_ds_scene.setPosition(2, [100,0,0]);
 two_ds_scene.setVelocity(2, [0,62.8316,0]);
 two_ds_scene.radii[2]=30;
 two_ds_scene.setM(2,4);
@@ -50,6 +50,8 @@ var VIEW_ANGLE = 75,
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+camera.position.z = 220;
+var controls = new THREE.TrackballControls( camera );
 var renderer = new THREE.WebGLRenderer();
 renderer.setClearColor( 0x0b0b0b, 1 );
 renderer.setSize( WIDTH, HEIGHT );
@@ -93,8 +95,6 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
 }
 
 
-camera.position.z = 220;
-
 var render = function () {
   two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
 
@@ -113,7 +113,7 @@ var render = function () {
     sphere.position.z=pos[2];
     sphere.rotation.y += 0.01;
   }
-
+  controls.update();
 	requestAnimationFrame( render );
 	renderer.render(scene, camera);
 };
