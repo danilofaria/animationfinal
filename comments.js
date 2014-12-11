@@ -30,3 +30,11 @@ var sphereMaterial =
 // pointLight.position.z = 130;
 // add to the scene
 // scene.add(pointLight);
+
+     var delta = clock.getDelta(),
+          time = clock.getElapsedTime() * 10;
+  
+   for ( var i = 0, l = geometry.vertices.length; i < l; i ++ ) {
+          geometry.vertices[ i ].y = 35 * Math.sin( i / 5 + ( time + i ) / 7 );
+        }
+  g

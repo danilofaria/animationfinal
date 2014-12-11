@@ -56,6 +56,10 @@ ParticlePath.prototype.addToPath = function( newpoint )
   if( this.path.getLength() >= this.max_list_size ) this.path.dequeue();
   this.path.enqueue(newpoint);
 }
+ParticlePath.prototype.getPoint = function( point_i )
+{
+	return this.path.getElement(point_i);
+}
 
 function Force() {
 }

@@ -1,6 +1,7 @@
 THREE.ImageUtils.crossOrigin = '';
 
 var materials = [];
+var paths = [];
 var transp_material = new THREE.MeshBasicMaterial( { color: 0x555555, transparent: true, blending: THREE.AdditiveBlending } );
 var shininess = 0, specular = 0x333333, bumpScale = 1, shading = THREE.SmoothShading;
 var earthTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png" );
@@ -32,11 +33,12 @@ two_ds_scene.insertForce(gravitational_force);
 
 two_ds_scene.setPosition(2, [100,0,0]);
 two_ds_scene.setVelocity(2, [0,62.8316,0]);
-two_ds_scene.radii[2]=30;
+two_ds_scene.radii[2]=20;
 two_ds_scene.setM(2,4);
 two_ds_scene.isFixed[2] = false;
 var gravitational_force = new GravitationalForce(0,2,1.18419);
 two_ds_scene.insertForce(gravitational_force);
+
 
 // set the scene size
 var WIDTH = window.innerWidth,//400,
@@ -58,6 +60,7 @@ renderer.setSize( WIDTH, HEIGHT );
 var explicit_euler = new ExplicitEuler();
 var dt = 0.01;
 document.body.appendChild( renderer.domElement );
+
 
 // set up the sphere vars
 var radius = 0.8,
@@ -88,22 +91,58 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
   // add the sphere to the scene
-  scene.add(sphere);
   if (i==0) sphere.add(pointLight);
   // if (i==1) sphere.add(camera);
+  scene.add(sphere);
   particles.push( sphere );
 }
 
 
+var path_geometries = []
+paths.push(new ParticlePath( 1, Math.ceil(3/dt), 0xffffff));
+paths.push(new ParticlePath( 2, Math.ceil(3/dt), 0xFFFFFF));
+
+for (var i=0; i<paths.length;i++){
+  var material = new THREE.LineBasicMaterial({
+    color: 0xffffff
+  });
+  var geometry = new THREE.Geometry();
+  for (var j=0;j< paths[i].max_list_size ;j++)
+    geometry.vertices.push(new THREE.Vector3( 0, 0, 0 ));
+  path_geometries.push(geometry);
+  var line = new THREE.Line( geometry, material );
+  scene.add( line );
+}
+
 var render = function () {
   two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
 
-// var pos = two_ds_scene.getPosition(1).toArray()[0];
+var pos = two_ds_scene.getPosition(1).toArray()[0];
 // var vel = two_ds_scene.getVelocity(1).toArray()[0];
 // camera.position.x = pos[0] //- vel[0];
 // camera.position.y = pos[1] //- vel[1];
 // camera.position.z = pos[2] //- vel[2];
 // camera.lookAt(new THREE.Vector3( vel[0], vel[1], vel[2] ));
+  // geometry.dynamic = true;
+        
+  for (i = 0; i < paths.length; i++){
+    pos = two_ds_scene.getPosition(paths[i].particle_i).toArray()[0];
+    paths[i].addToPath(pos);
+  }
+  
+  for (var i=0; i<paths.length;i++){
+    path = paths[i];
+    var geometry = path_geometries[i];
+    var max_n = path.max_list_size;
+    for ( var j = 0, l = max_n; j < l; j ++ ) {
+      pos_temp = path.getPoint(j);
+      if (pos_temp != undefined) pos = pos_temp;
+      geometry.vertices[ j ].x = pos[0];
+      geometry.vertices[ j ].y = pos[1];
+      geometry.vertices[ j ].z = pos[2];
+    }
+    geometry.verticesNeedUpdate = true;
+  }
 
   for (i = 0; i < two_ds_scene.num_particles; i++) {
     var pos = two_ds_scene.getPosition(i).toArray()[0];
