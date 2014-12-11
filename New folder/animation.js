@@ -17,11 +17,6 @@ THREE.ImageUtils.crossOrigin = '';
 var materials = [];
 var transp_material = new THREE.MeshBasicMaterial( { color: 0x555555, transparent: true, blending: THREE.AdditiveBlending } );
 var shininess = 0, specular = 0x333333, bumpScale = 1, shading = THREE.SmoothShading;
-
-var sunTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/sun.png" );
-sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
-sunTexture.anisotropy = 16;
-
 var earthTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png" );
 earthTexture.wrapS = earthTexture.wrapT = THREE.RepeatWrapping;
 earthTexture.anisotropy = 16;
@@ -30,12 +25,10 @@ var mercuryTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxuserconten
 mercuryTexture.wrapS = mercuryTexture.wrapT = THREE.RepeatWrapping;
 mercuryTexture.anisotropy = 16;
 
-
-// var sunMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, emissive: 0xffff00, ambient: 0x000000, shading: THREE.SmoothShading } );
-// materials.push(sunMaterial);
+var sunMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, emissive: 0xffff00, ambient: 0x000000, shading: THREE.SmoothShading } );
+materials.push(sunMaterial);
 // materials.push( new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: true, blending: THREE.AdditiveBlending } ) );
 // materials.push( new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } ) );
-materials.push( new THREE.MeshPhongMaterial( { map: sunTexture, emissive: 0xffff00, bumpMap: sunTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 materials.push( new THREE.MeshPhongMaterial( { map: earthTexture, bumpMap: earthTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 materials.push( new THREE.MeshPhongMaterial( { map: mercuryTexture, bumpMap: mercuryTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 
@@ -126,8 +119,8 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
 //Paths initialization
 var paths = [];
 var path_geometries = []
-paths.push(new ParticlePath( 1, Math.ceil(6/dt), 0xffffff));
-paths.push(new ParticlePath( 2, Math.ceil(6/dt), 0xffffff));
+paths.push(new ParticlePath( 1, Math.ceil(3/dt), 0xffffff));
+paths.push(new ParticlePath( 2, Math.ceil(3/dt), 0xffffff));
 for (var i=0; i<paths.length;i++){
   var material = new THREE.LineBasicMaterial({
     color: paths[i].color
