@@ -14,30 +14,24 @@ document.addEventListener( 'click', onDocumentMouseClick, false );
 
 THREE.ImageUtils.crossOrigin = '';
 
+var texture_dir = [
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/sun.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/mercury.png"
+]
 var materials = [];
 var transp_material = new THREE.MeshBasicMaterial( { color: 0x555555, transparent: true, blending: THREE.AdditiveBlending } );
 var shininess = 0, specular = 0x333333, bumpScale = 1, shading = THREE.SmoothShading;
 
-var sunTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/sun.png" );
-sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
-sunTexture.anisotropy = 16;
-
-var earthTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png" );
-earthTexture.wrapS = earthTexture.wrapT = THREE.RepeatWrapping;
-earthTexture.anisotropy = 16;
-
-var mercuryTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/mercury.png" );
-mercuryTexture.wrapS = mercuryTexture.wrapT = THREE.RepeatWrapping;
-mercuryTexture.anisotropy = 16;
-
-
-// var sunMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, emissive: 0xffff00, ambient: 0x000000, shading: THREE.SmoothShading } );
-// materials.push(sunMaterial);
-// materials.push( new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: true, blending: THREE.AdditiveBlending } ) );
-// materials.push( new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } ) );
-materials.push( new THREE.MeshPhongMaterial( { map: sunTexture, emissive: 0xffff00, bumpMap: sunTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
-materials.push( new THREE.MeshPhongMaterial( { map: earthTexture, bumpMap: earthTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
-materials.push( new THREE.MeshPhongMaterial( { map: mercuryTexture, bumpMap: mercuryTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
+for(var i=0; i<3; i++){
+  var texture = THREE.ImageUtils.loadTexture( texture_dir[i] );
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 16;
+  if (i==0)
+  materials.push( new THREE.MeshPhongMaterial( { map: texture, emissive: 0xffff00, bumpMap: texture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
+  else
+  materials.push( new THREE.MeshPhongMaterial( { map: texture, bumpMap: texture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
+}
 
 var two_ds_scene = new TwoDScene(3);
 two_ds_scene.setPosition(0, [0,0,0]);
@@ -61,6 +55,7 @@ two_ds_scene.isFixed[2] = false;
 var gravitational_force = new GravitationalForce(0,2,1.18419);
 two_ds_scene.insertForce(gravitational_force);
 
+two_ds_scene.insertEdge([0,2],4);
 
 // set the scene size
 var WIDTH = window.innerWidth,//400,
@@ -86,19 +81,29 @@ var explicit_euler = new ExplicitEuler();
 var dt = 0.01;
 document.body.appendChild( renderer.domElement );
 
+//http://threejs.org/examples/webgl_camera.html
+var geometry = new THREE.Geometry();
+for ( var i = 0; i < 10000; i ++ ) {
+  var vertex = new THREE.Vector3();
+  vertex.x = THREE.Math.randFloatSpread( 2000 );
+  vertex.y = THREE.Math.randFloatSpread( 2000 );
+  vertex.z = THREE.Math.randFloatSpread( 2000 );
+  geometry.vertices.push( vertex );
+}
+var particles = new THREE.PointCloud( geometry, new THREE.PointCloudMaterial( { color: 0x888888 } ) );
+scene.add( particles );
 
 // set up the sphere vars
-var radius = 0.8,
-    segments = 16,
-    rings = 16;
+var radius = 0.8, segments = 16, rings = 16;
 
 // create a point light
 var pointLight =
   new THREE.PointLight(0xFFFFFF, 1);
-  
+
+//Particles initialization  
 var particles = new Array(0);
 for (i = 0; i < two_ds_scene.num_particles; i++) {
-  var pos = two_ds_scene.getPosition(i).toArray()[0];
+  var pos = two_ds_scene.getPosition(i);
   radius = two_ds_scene.radii[i];
 
   var sphere = new THREE.Mesh(
@@ -106,22 +111,46 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
       radius, segments,rings),
     materials[i]);
 
-  // var sphere2 = new THREE.Mesh(
-  //   new THREE.SphereGeometry(
-  //     radius+2, segments,rings),
-  //   transp_material);
-  // sphere.add(sphere2);
-
   sphere.position.x=pos[0];
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
   sphere.particle_i = i;
-  // add the sphere to the scene
+  sphere.is_planet = true;
   if (i==0) sphere.add(pointLight);
-  // if (i==1) sphere.add(camera);
   scene.add(sphere);
   particles.push( sphere );
 }
+//End of particless initialization
+
+//Edges initialization  
+// var edges = new Array(0);
+// for (i = 0; i < two_ds_scene.edges.length; i++) {
+//   var edge = two_ds_scene.edges[i];
+//   var edge_radius = two_ds_scene.edges_radii[i];
+//   var pos1 = two_ds_scene.getPosition(edge[0]);
+//   var pos2 = two_ds_scene.getPosition(edge[1]);
+//   pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
+//   pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
+
+//   var height = pos1.distanceTo(pos2);
+//   var half_way = new THREE.Vector3();
+//   half_way.subVectors(pos2,pos1);
+//   half_way.divideScalar(2);
+//   half_way.add(pos1);
+
+//   var edge_geometry = new THREE.CylinderGeometry( edge_radius, edge_radius, height, 32 );
+//   var edge_material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+//   var cylinder = new THREE.Mesh( edge_geometry, edge_material );
+//   cylinder.position=half_way;
+//   cylinder.position.x=half_way.x;
+//   cylinder.position.y=half_way.y;
+//   cylinder.position.z=half_way.z;
+
+//   scene.add( cylinder );
+//   edges.push(cylinder);
+// }
+//End of edges initialization
+
 
 //Paths initialization
 var paths = [];
@@ -141,21 +170,32 @@ for (var i=0; i<paths.length;i++){
 }
 //End of paths initialization
 
+var geometry_axis = new THREE.CylinderGeometry( 5, 5, 150, 32 );
+var material_x = new THREE.MeshBasicMaterial( {color: 0xddddff} );
+var material_y = new THREE.MeshBasicMaterial( {color: 0xaaaaff} );
+var material_z = new THREE.MeshBasicMaterial( {color: 0xccccff} );
+var cylinder_x = new THREE.Mesh( geometry_axis, material_x );
+var cylinder_y = new THREE.Mesh( geometry_axis, material_y );
+var cylinder_z = new THREE.Mesh( geometry_axis, material_z );
+cylinder_x.position=new THREE.Vector3(0,0,0);
+cylinder_y.position=new THREE.Vector3(0,0,0);
+cylinder_z.position=new THREE.Vector3(0,0,0);
+cylinder_x.rotation.z = -3.1415/2; 
+cylinder_z.rotation.x = 3.1415/2; 
+scene.add( cylinder_x );
+scene.add( cylinder_y );
+scene.add( cylinder_z );
+
+
+
+
 var pos,vel;
 var render = function () {
   two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
-
-  // var pos = two_ds_scene.getPosition(1).toArray()[0];
-// var vel = two_ds_scene.getVelocity(1).toArray()[0];
-// camera.position.x = pos[0] //- vel[0];
-// camera.position.y = pos[1] //- vel[1];
-// camera.position.z = pos[2] //- vel[2];
-// camera.lookAt(new THREE.Vector3( vel[0], vel[1], vel[2] ));
-  // geometry.dynamic = true;
-        
+      
   // Paths update and rendering
   for (i = 0; i < paths.length; i++){
-    pos = two_ds_scene.getPosition(paths[i].particle_i).toArray()[0];
+    pos = two_ds_scene.getPosition(paths[i].particle_i);
     paths[i].addToPath(pos);
   }
   for (var i=0; i<paths.length;i++){
@@ -173,16 +213,14 @@ var render = function () {
   }
   // End of paths update and rendering
 
-
   for (i = 0; i < two_ds_scene.num_particles; i++) {
-    var pos = two_ds_scene.getPosition(i).toArray()[0];
+    var pos = two_ds_scene.getPosition(i);
     var sphere = particles[i];
     sphere.position.x=pos[0];
     sphere.position.y=pos[1];
     sphere.position.z=pos[2];
     sphere.rotation.y += 0.01;
   }
-
 
   // find intersections
   var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
@@ -191,9 +229,11 @@ var render = function () {
   if ( intersects.length > 0 ) {
     if ( INTERSECTED != intersects[ 0 ].object ) {
       if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-      INTERSECTED = intersects[ 0 ].object;
-      INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-      INTERSECTED.material.emissive.setHex( 0xff0000 );
+      if ( intersects[ 0 ].object.is_planet){
+        INTERSECTED = intersects[ 0 ].object;
+        INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+        INTERSECTED.material.emissive.setHex( 0xff0000 );
+      } else {INTERSECTED=null;}
     }
   } else {
     if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
@@ -203,8 +243,8 @@ var render = function () {
     CAM_FOLLOW_i=INTERSECTED.particle_i;
   }
   if(CAM_FOLLOW_i){
-    pos = two_ds_scene.getPosition(CAM_FOLLOW_i).toArray()[0];
-    vel = two_ds_scene.getVelocity(CAM_FOLLOW_i).toArray()[0];
+    pos = two_ds_scene.getPosition(CAM_FOLLOW_i);
+    vel = two_ds_scene.getVelocity(CAM_FOLLOW_i);
     radius = two_ds_scene.radii[CAM_FOLLOW_i];
     vel = new THREE.Vector3( vel[0], vel[1], vel[2] );
     vel = vel.normalize();

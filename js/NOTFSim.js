@@ -4,6 +4,8 @@ function TwoDScene(num_particles) {
 	this.X = math.zeros(num_particles, 3);
 	this.V = math.zeros(num_particles, 3);
 	this.M = new Array(num_particles);
+	this.edges = new Array(0);
+	this.edges_radii = new Array(0);
 	this.radii = new Array(num_particles);
 	this.isFixed = new Array(num_particles);
 	this.forces = new Array(0);
@@ -14,7 +16,7 @@ TwoDScene.prototype.setPosition = function (particle_i, pos) {
 };
 
 TwoDScene.prototype.getPosition = function (particle_i) { 
-	return this.X.subset(math.index(particle_i, [0, 3]));
+	return this.X.subset(math.index(particle_i, [0, 3])).toArray()[0];
 }
 
 TwoDScene.prototype.setVelocity = function (particle_i, vel) { 
@@ -22,7 +24,7 @@ TwoDScene.prototype.setVelocity = function (particle_i, vel) {
 };
 
 TwoDScene.prototype.getVelocity = function (particle_i) { 
-	return this.V.subset(math.index(particle_i, [0, 3]));
+	return this.V.subset(math.index(particle_i, [0, 3])).toArray()[0];
 };
 
 TwoDScene.prototype.setM = function (particle_i, m) { 
@@ -35,6 +37,11 @@ TwoDScene.prototype.getM = function (particle_i) {
 
 TwoDScene.prototype.insertForce = function (newForce) { 
 	this.forces.push(newForce);
+};
+
+TwoDScene.prototype.insertEdge = function (edge, radius) { 
+	this.edges.push(edge);
+	this.edges_radii.push(radius);
 };
 
 TwoDScene.prototype.accumulateGradU = function (F) { 
