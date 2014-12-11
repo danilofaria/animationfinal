@@ -1,7 +1,14 @@
+var mouse = new THREE.Vector2(), INTERSECTED;
+function onDocumentMouseMove( event ) {
+  event.preventDefault();
+  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
 THREE.ImageUtils.crossOrigin = '';
 
 var materials = [];
-var paths = [];
 var transp_material = new THREE.MeshBasicMaterial( { color: 0x555555, transparent: true, blending: THREE.AdditiveBlending } );
 var shininess = 0, specular = 0x333333, bumpScale = 1, shading = THREE.SmoothShading;
 var earthTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png" );
@@ -12,8 +19,10 @@ var mercuryTexture = THREE.ImageUtils.loadTexture( "https://dl.dropboxuserconten
 mercuryTexture.wrapS = mercuryTexture.wrapT = THREE.RepeatWrapping;
 mercuryTexture.anisotropy = 16;
 
-materials.push( new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: true, blending: THREE.AdditiveBlending } ) );
-//materials.push( new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, emissive: 0xff0000, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } ) );
+var sunMaterial = new THREE.MeshLambertMaterial( { color: 0x666666, emissive: 0xffff00, ambient: 0x000000, shading: THREE.SmoothShading } );
+materials.push(sunMaterial);
+// materials.push( new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: true, blending: THREE.AdditiveBlending } ) );
+// materials.push( new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } ) );
 materials.push( new THREE.MeshPhongMaterial( { map: earthTexture, bumpMap: earthTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 materials.push( new THREE.MeshPhongMaterial( { map: mercuryTexture, bumpMap: mercuryTexture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 
@@ -50,12 +59,15 @@ var VIEW_ANGLE = 75,
   NEAR = 0.1,
   FAR = 10000;
 
+var raycaster= new THREE.Raycaster();
+
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
 camera.position.z = 220;
 var controls = new THREE.TrackballControls( camera );
 var renderer = new THREE.WebGLRenderer();
 renderer.setClearColor( 0x0b0b0b, 1 );
+renderer.sortObjects = false;
 renderer.setSize( WIDTH, HEIGHT );
 var explicit_euler = new ExplicitEuler();
 var dt = 0.01;
@@ -97,14 +109,14 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   particles.push( sphere );
 }
 
-
+//Paths initialization
+var paths = [];
 var path_geometries = []
 paths.push(new ParticlePath( 1, Math.ceil(3/dt), 0xffffff));
-paths.push(new ParticlePath( 2, Math.ceil(3/dt), 0xFFFFFF));
-
+paths.push(new ParticlePath( 2, Math.ceil(3/dt), 0xffffff));
 for (var i=0; i<paths.length;i++){
   var material = new THREE.LineBasicMaterial({
-    color: 0xffffff
+    color: paths[i].color
   });
   var geometry = new THREE.Geometry();
   for (var j=0;j< paths[i].max_list_size ;j++)
@@ -113,11 +125,12 @@ for (var i=0; i<paths.length;i++){
   var line = new THREE.Line( geometry, material );
   scene.add( line );
 }
+//End of paths initialization
 
 var render = function () {
   two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
 
-var pos = two_ds_scene.getPosition(1).toArray()[0];
+  var pos = two_ds_scene.getPosition(1).toArray()[0];
 // var vel = two_ds_scene.getVelocity(1).toArray()[0];
 // camera.position.x = pos[0] //- vel[0];
 // camera.position.y = pos[1] //- vel[1];
@@ -125,11 +138,11 @@ var pos = two_ds_scene.getPosition(1).toArray()[0];
 // camera.lookAt(new THREE.Vector3( vel[0], vel[1], vel[2] ));
   // geometry.dynamic = true;
         
+  // Paths update and rendering
   for (i = 0; i < paths.length; i++){
     pos = two_ds_scene.getPosition(paths[i].particle_i).toArray()[0];
     paths[i].addToPath(pos);
   }
-  
   for (var i=0; i<paths.length;i++){
     path = paths[i];
     var geometry = path_geometries[i];
@@ -143,6 +156,8 @@ var pos = two_ds_scene.getPosition(1).toArray()[0];
     }
     geometry.verticesNeedUpdate = true;
   }
+  // End of paths update and rendering
+
 
   for (i = 0; i < two_ds_scene.num_particles; i++) {
     var pos = two_ds_scene.getPosition(i).toArray()[0];
@@ -152,6 +167,24 @@ var pos = two_ds_scene.getPosition(1).toArray()[0];
     sphere.position.z=pos[2];
     sphere.rotation.y += 0.01;
   }
+
+
+  // find intersections
+  var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+  raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+  var intersects = raycaster.intersectObjects( scene.children );
+  if ( intersects.length > 0 ) {
+    if ( INTERSECTED != intersects[ 0 ].object ) {
+      if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+      INTERSECTED = intersects[ 0 ].object;
+      INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+      INTERSECTED.material.emissive.setHex( 0xff0000 );
+    }
+  } else {
+    if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+    INTERSECTED = null;
+  }
+
   controls.update();
 	requestAnimationFrame( render );
 	renderer.render(scene, camera);
