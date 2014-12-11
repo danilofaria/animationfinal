@@ -1,10 +1,16 @@
-var mouse = new THREE.Vector2(), INTERSECTED;
+var mouse = new THREE.Vector2(), INTERSECTED, CAM_FOLLOW_i;
+var mouse_clicked = false;
 function onDocumentMouseMove( event ) {
   event.preventDefault();
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
+function onDocumentMouseClick( event ) {
+  event.preventDefault();
+  mouse_clicked = true;
+}
 document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+document.addEventListener( 'click', onDocumentMouseClick, false );
 
 THREE.ImageUtils.crossOrigin = '';
 
@@ -102,6 +108,7 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.x=pos[0];
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
+  sphere.particle_i = i;
   // add the sphere to the scene
   if (i==0) sphere.add(pointLight);
   // if (i==1) sphere.add(camera);
@@ -127,10 +134,11 @@ for (var i=0; i<paths.length;i++){
 }
 //End of paths initialization
 
+var pos,vel;
 var render = function () {
   two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
 
-  var pos = two_ds_scene.getPosition(1).toArray()[0];
+  // var pos = two_ds_scene.getPosition(1).toArray()[0];
 // var vel = two_ds_scene.getVelocity(1).toArray()[0];
 // camera.position.x = pos[0] //- vel[0];
 // camera.position.y = pos[1] //- vel[1];
@@ -184,10 +192,31 @@ var render = function () {
     if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
     INTERSECTED = null;
   }
-
+  if (mouse_clicked && INTERSECTED){
+    // INTERSECTED.add(camera);
+    CAM_FOLLOW_i=INTERSECTED.particle_i;
+  }
+  if(CAM_FOLLOW_i){
+    pos = two_ds_scene.getPosition(CAM_FOLLOW_i).toArray()[0];
+    vel = two_ds_scene.getVelocity(CAM_FOLLOW_i).toArray()[0];
+    radius = two_ds_scene.radii[CAM_FOLLOW_i];
+    vel = new THREE.Vector3( vel[0], vel[1], vel[2] );
+    vel = vel.normalize();
+    camera.position.x = pos[0] -vel.x*radius*2;
+    camera.position.y = pos[1] -vel.y*radius*2;//- vel[1];
+    camera.position.z = pos[2] -vel.z*radius*2;//- vel[2];+220;//
+    camera.up = new THREE.Vector3(0,1,0);
+    camera.lookAt(new THREE.Vector3( pos[0], pos[1], pos[2] ));
+  }else{
   controls.update();
-	requestAnimationFrame( render );
-	renderer.render(scene, camera);
+  }
+
+  raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+  mouse_clicked = false;
+  
+  requestAnimationFrame( render );
+  renderer.render(scene, camera);
 };
 
   render();
+
