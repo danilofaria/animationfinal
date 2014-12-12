@@ -16,14 +16,22 @@ THREE.ImageUtils.crossOrigin = '';
 
 var texture_dir = [
 "https://dl.dropboxusercontent.com/u/25861113/planet_textures/sun.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/mercury.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/venus.png",
 "https://dl.dropboxusercontent.com/u/25861113/planet_textures/earth.png",
-"https://dl.dropboxusercontent.com/u/25861113/planet_textures/mercury.png"
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/mars.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/jupiter.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/saturn.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/uranus.png",
+"https://dl.dropboxusercontent.com/u/25861113/planet_textures/neptune.png",
 ]
+
 var materials = [];
 var transp_material = new THREE.MeshBasicMaterial( { color: 0x555555, transparent: true, blending: THREE.AdditiveBlending } );
 var shininess = 0, specular = 0x333333, bumpScale = 1, shading = THREE.SmoothShading;
+var n_planets = 8;
 
-for(var i=0; i<3; i++){
+for(var i=0; i<n_planets+1; i++){
   var texture = THREE.ImageUtils.loadTexture( texture_dir[i] );
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.anisotropy = 16;
@@ -33,29 +41,39 @@ for(var i=0; i<3; i++){
   materials.push( new THREE.MeshPhongMaterial( { map: texture, bumpMap: texture, bumpScale: bumpScale, color: 0xFFFFFF, ambient: 0x000000, specular: 0xffffff, shininess: shininess, metal: false, shading: shading } ) );
 }
 
-var two_ds_scene = new TwoDScene(3);
+var G = 1.18419, M=331436;
+var two_ds_scene = new TwoDScene(n_planets+1);
+var explicit_euler = new ExplicitEuler();
+var dt = 0.005;
+
+//Sun
 two_ds_scene.setPosition(0, [0,0,0]);
 two_ds_scene.radii[0]=50;
-two_ds_scene.setM(0,331436);
+two_ds_scene.setM(0,M);
 two_ds_scene.isFixed[0] = true;
 
-two_ds_scene.setPosition(1, [100,0,0]);
-two_ds_scene.setVelocity(1, [0,0,62.8316]);
-two_ds_scene.radii[1]=20;
-two_ds_scene.setM(1,1);
-two_ds_scene.isFixed[1] = false;
-var gravitational_force = new GravitationalForce(0,1,1.18419);
-two_ds_scene.insertForce(gravitational_force);
-
-two_ds_scene.setPosition(2, [100,0,0]);
-two_ds_scene.setVelocity(2, [0,62.8316,0]);
-two_ds_scene.radii[2]=20;
-two_ds_scene.setM(2,4);
-two_ds_scene.isFixed[2] = false;
-var gravitational_force = new GravitationalForce(0,2,1.18419);
-two_ds_scene.insertForce(gravitational_force);
-
-two_ds_scene.insertEdge([0,2],4);
+//Other planets
+var offset = 50;
+var r = 3;
+//distance to sun, radius, angle
+var data = [[150-offset, 1*r, 0],[160-offset, 1*r, 30],[170-offset, 1*r, 45],[180-offset, 0.5*r, 125],
+[230-offset, 10*r, 200],[260-offset, 9*r, 100],[290-offset, 4*r, 300],[310-offset, 4*r, 250]]
+var paths = [];
+for(var i=1; i<n_planets+1; i++){
+  var dist = data[i-1][0];
+  var ca = data[i-1][2];
+  var pos = [dist * Math.sin(ca * Math.PI/180), 0, dist * Math.cos(ca * Math.PI/180)]
+  two_ds_scene.setPosition(i, pos);
+  var sign = (i % 2 == 0) ? 1 : -1;
+  two_ds_scene.setVelocity(i, [0,sign*Math.sqrt(G*M/dist),0]);
+  two_ds_scene.radii[i]=data[i-1][1];
+  two_ds_scene.setM(i,1);
+  two_ds_scene.isFixed[i] = false;
+  var gravitational_force = new GravitationalForce(0,i,G);
+  two_ds_scene.insertForce(gravitational_force);
+  var duration = dist/10;
+  paths.push(new ParticlePath( i, Math.ceil(duration/dt), 0xffffff));
+}
 
 // set the scene size
 var WIDTH = window.innerWidth,//400,
@@ -77,25 +95,30 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setClearColor( 0x0b0b0b, 1 );
 renderer.sortObjects = false;
 renderer.setSize( WIDTH, HEIGHT );
-var explicit_euler = new ExplicitEuler();
-var dt = 0.01;
 document.body.appendChild( renderer.domElement );
 
 //http://threejs.org/examples/webgl_camera.html
 var geometry = new THREE.Geometry();
 for ( var i = 0; i < 10000; i ++ ) {
   var vertex = new THREE.Vector3();
-  vertex.x = THREE.Math.randFloatSpread( 2000 );
-  vertex.y = THREE.Math.randFloatSpread( 2000 );
-  vertex.z = THREE.Math.randFloatSpread( 2000 );
+  vertex.x = THREE.Math.randFloatSpread( 5000 );
+  vertex.y = THREE.Math.randFloatSpread( 5000 );
+  vertex.z = THREE.Math.randFloatSpread( 5000 );
+  //My change
+  while(vertex.length() < 1000){
+    vertex.x = THREE.Math.randFloatSpread( 5000 );
+    vertex.y = THREE.Math.randFloatSpread( 5000 );
+    vertex.z = THREE.Math.randFloatSpread( 5000 );
+  }
   geometry.vertices.push( vertex );
 }
 var particles = new THREE.PointCloud( geometry, new THREE.PointCloudMaterial( { color: 0x888888 } ) );
 scene.add( particles );
 
+
+
 // set up the sphere vars
 var radius = 0.8, segments = 16, rings = 16;
-
 // create a point light
 var pointLight =
   new THREE.PointLight(0xFFFFFF, 1);
@@ -115,48 +138,52 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
   sphere.particle_i = i;
-  sphere.is_planet = true;
   if (i==0) sphere.add(pointLight);
+  else
+  sphere.is_planet = true;
   scene.add(sphere);
   particles.push( sphere );
 }
 //End of particless initialization
 
 //Edges initialization  
-// var edges = new Array(0);
-// for (i = 0; i < two_ds_scene.edges.length; i++) {
-//   var edge = two_ds_scene.edges[i];
-//   var edge_radius = two_ds_scene.edges_radii[i];
-//   var pos1 = two_ds_scene.getPosition(edge[0]);
-//   var pos2 = two_ds_scene.getPosition(edge[1]);
-//   pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
-//   pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
+var edges = new Array(0);
+for (i = 0; i < two_ds_scene.edges.length; i++) {
+  var edge = two_ds_scene.edges[i];
+  var edge_radius = two_ds_scene.edges_radii[i];
+  var pos1 = two_ds_scene.getPosition(edge[0]);
+  var pos2 = two_ds_scene.getPosition(edge[1]);
+  pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
+  pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
 
-//   var height = pos1.distanceTo(pos2);
-//   var half_way = new THREE.Vector3();
-//   half_way.subVectors(pos2,pos1);
-//   half_way.divideScalar(2);
-//   half_way.add(pos1);
+  var height = pos1.distanceTo(pos2);
+  var half_way = new THREE.Vector3();
+  half_way.subVectors(pos2,pos1);
+  half_way.divideScalar(2);
+  half_way.add(pos1);
 
-//   var edge_geometry = new THREE.CylinderGeometry( edge_radius, edge_radius, height, 32 );
-//   var edge_material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-//   var cylinder = new THREE.Mesh( edge_geometry, edge_material );
-//   cylinder.position=half_way;
-//   cylinder.position.x=half_way.x;
-//   cylinder.position.y=half_way.y;
-//   cylinder.position.z=half_way.z;
+  var orientation = new THREE.Vector3();
+  orientation.subVectors(pos2,pos1);
 
-//   scene.add( cylinder );
-//   edges.push(cylinder);
-// }
+  var edge_geometry = new THREE.CylinderGeometry( edge_radius, edge_radius, 1, 32 );
+  var edge_material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+  var cylinder = new THREE.Mesh( edge_geometry, edge_material );
+  cylinder.scale.y = height;
+  cylinder.position=half_way;
+  cylinder.position.x=half_way.x;
+  cylinder.position.y=half_way.y;
+  cylinder.position.z=half_way.z;
+  cylinder.rotation.z= Math.PI/2 - Math.atan2(orientation.y, orientation.x);
+  cylinder.rotation.y= Math.PI/2 + Math.atan2(orientation.x, orientation.z);
+
+  scene.add( cylinder );
+  edges.push(cylinder);
+}
 //End of edges initialization
 
 
 //Paths initialization
-var paths = [];
 var path_geometries = []
-paths.push(new ParticlePath( 1, Math.ceil(6/dt), 0xffffff));
-paths.push(new ParticlePath( 2, Math.ceil(6/dt), 0xffffff));
 for (var i=0; i<paths.length;i++){
   var material = new THREE.LineBasicMaterial({
     color: paths[i].color
@@ -170,7 +197,7 @@ for (var i=0; i<paths.length;i++){
 }
 //End of paths initialization
 
-var geometry_axis = new THREE.CylinderGeometry( 5, 5, 150, 32 );
+var geometry_axis = new THREE.CylinderGeometry( 1, 1, 150, 32 );
 var material_x = new THREE.MeshBasicMaterial( {color: 0xddddff} );
 var material_y = new THREE.MeshBasicMaterial( {color: 0xaaaaff} );
 var material_z = new THREE.MeshBasicMaterial( {color: 0xccccff} );
@@ -185,8 +212,6 @@ cylinder_z.rotation.x = 3.1415/2;
 scene.add( cylinder_x );
 scene.add( cylinder_y );
 scene.add( cylinder_z );
-
-
 
 
 var pos,vel;
@@ -213,6 +238,7 @@ var render = function () {
   }
   // End of paths update and rendering
 
+  // Move particles
   for (i = 0; i < two_ds_scene.num_particles; i++) {
     var pos = two_ds_scene.getPosition(i);
     var sphere = particles[i];
@@ -220,6 +246,32 @@ var render = function () {
     sphere.position.y=pos[1];
     sphere.position.z=pos[2];
     sphere.rotation.y += 0.01;
+  }
+
+  // Move edges
+  for (i = 0; i < two_ds_scene.edges.length; i++) {
+    var edge_info = two_ds_scene.edges[i];
+    var pos1 = two_ds_scene.getPosition(edge_info[0]);
+    var pos2 = two_ds_scene.getPosition(edge_info[1]);
+    pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
+    pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
+
+    var height = pos1.distanceTo(pos2);
+    var half_way = new THREE.Vector3();
+    half_way.subVectors(pos2,pos1);
+    half_way.divideScalar(2);
+    half_way.add(pos1);
+
+    var orientation = new THREE.Vector3();
+    orientation.subVectors(pos2,pos1);
+    cylinder=edges[i];
+    cylinder.scale.y = height;
+    cylinder.position=half_way;
+    cylinder.position.x=half_way.x;
+    cylinder.position.y=half_way.y;
+    cylinder.position.z=half_way.z;
+    cylinder.rotation.z= Math.PI/2 - Math.atan2(orientation.y, orientation.x);
+    cylinder.rotation.y= Math.PI/2 + Math.atan2(orientation.x, orientation.z);
   }
 
   // find intersections
@@ -239,8 +291,15 @@ var render = function () {
     if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
     INTERSECTED = null;
   }
-  if (mouse_clicked && INTERSECTED){
-    CAM_FOLLOW_i=INTERSECTED.particle_i;
+  // if (mouse_clicked && INTERSECTED){
+  //   CAM_FOLLOW_i=INTERSECTED.particle_i;
+  // }
+  if (mouse_clicked){
+    if (INTERSECTED)
+      CAM_FOLLOW_i=INTERSECTED.particle_i;
+    else{
+      CAM_FOLLOW_i = 0;
+    }
   }
   if(CAM_FOLLOW_i){
     pos = two_ds_scene.getPosition(CAM_FOLLOW_i);
@@ -254,7 +313,7 @@ var render = function () {
     camera.up = new THREE.Vector3(0,1,0);
     camera.lookAt(new THREE.Vector3( pos[0], pos[1], pos[2] ));
   }else{
-  controls.update();
+    controls.update();
   }
 
   raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
@@ -265,4 +324,3 @@ var render = function () {
 };
 
   render();
-
