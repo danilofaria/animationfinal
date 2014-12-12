@@ -96,3 +96,72 @@ var sphereMaterial =
   //     radius+2, segments,rings),
   //   transp_material);
   // sphere.add(sphere2);
+
+
+
+// var basic_material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// materials.push(new THREE.MeshBasicMaterial( { color: 0x00ff00 } ));
+
+// genComets = function(count) {
+//   for (var i = 0; i < count; i++) {
+//     materials.push(new THREE.MeshBasicMaterial( { color: 0x00ff00 } ));
+
+//     // name = "comet" + i;
+//     var ca = Math.random() * 360; // angle in x-z plane
+//     var cr = (Math.random() * 100000) + 100000; // distance from sun
+//     cr *= 4e6;
+//     var pos = [cr * Math.sin(ca * 3.1415/180), 0, cr * Math.cos(ca * 3.1415/180)];
+//     // comet initial velocity
+//     var v = ((Math.random() * 200) + 100) * 50.0;
+//     v = (i % 2 == 1) ? -v : v;
+//     var vel = [0, v, 0];
+//     // var color = engine.planetColors[i % engine.planetColors.length];
+//     // var comet = new OrbitBody(name, 1e3, pos, vel, 1e9, color);
+//     // OrbitBody = function(name, radius, pos, vel, mass, color) {
+//     // comet_array.push(comet);
+
+//     two_ds_scene.setPosition(3+i, pos);
+//     two_ds_scene.setVelocity(3+i, vel);
+//     two_ds_scene.radii[3+i] = 20;
+//     two_ds_scene.setM(3+i, 1);
+//     two_ds_scene.isFixed[3+i] = false;
+//     var gravitational_force = new GravitationalForce( 0, 3+i, 1.18419 );
+//     two_ds_scene.insertForce(gravitational_force);
+//   }
+// }
+// genComets(2);
+
+
+
+
+    // "Name,OrbitRad,BodyRad,Mass,OrbitVel\n"
+    // + "Sun,0,695000000,1.989E+030,0\n"
+    // + "Mercury,57900000000,2440000,3.33E+023,47900\n"
+    // + "Venus,108000000000,6050000,4.869E+024,35000\n"
+    // + "Earth,150000000000,6378140,5.976E+024,29800\n"
+    // + "Mars,227940000000,3397200,6.421E+023,24100\n"
+    // + "Jupiter,778330000000,71492000,1.9E+027,13100\n"
+    // + "Saturn,1429400000000,60268000,5.688E+026,9640\n"
+    // + "Uranus,2870990000000,25559000,8.686E+025,6810\n"
+    // + "Neptune,4504300000000,24746000,1.024E+026,5430\n"
+// two_ds_scene.setPosition(2, [100,0,0]);
+// two_ds_scene.setVelocity(2, [0,62.8316,0]);
+// two_ds_scene.radii[2]=20;
+// two_ds_scene.setM(2,1);
+// two_ds_scene.isFixed[2] = false;
+// var gravitational_force = new GravitationalForce(0,2,1.18419);
+// two_ds_scene.insertForce(gravitational_force);
+
+// two_ds_scene.setPosition(2, [200,0,0]);
+// two_ds_scene.setVelocity(2, [0,44.299,0]);
+// two_ds_scene.radii[2]=20;
+// two_ds_scene.setM(2,1);
+// two_ds_scene.isFixed[2] = false;
+// var gravitational_force = new GravitationalForce(0,2,1.18419);
+// two_ds_scene.insertForce(gravitational_force);
+
+// two_ds_scene.insertEdge([1,2],4);
+// two_ds_scene.insertEdge([2,3],4);
+// two_ds_scene.insertEdge([4,0],4);
+
+
