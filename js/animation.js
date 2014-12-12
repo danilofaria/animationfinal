@@ -82,6 +82,11 @@ var ring_material = new THREE.MeshBasicMaterial( { color: 0x663300, oppacity:0.5
 var ring_mesh = new THREE.Mesh( ring_geometry, ring_material );
 ring_mesh.rotation.x = Math.PI/2;
 
+// two_ds_scene.insertEdge([1,2],4);
+// two_ds_scene.insertEdge([2,3],4);
+// two_ds_scene.insertEdge([4,0],4);
+// two_ds_scene.insertEdge([7,6],4);
+
 // set the scene size
 var WIDTH = window.innerWidth,//400,
   HEIGHT = window.innerHeight;//300;
@@ -168,24 +173,18 @@ for (i = 0; i < two_ds_scene.edges.length; i++) {
   pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
 
   var height = pos1.distanceTo(pos2);
-  var half_way = new THREE.Vector3();
-  half_way.subVectors(pos2,pos1);
-  half_way.divideScalar(2);
-  half_way.add(pos1);
-
-  var orientation = new THREE.Vector3();
-  orientation.subVectors(pos2,pos1);
+  var position  = pos2.clone().add(pos1).divideScalar(2);
 
   var edge_geometry = new THREE.CylinderGeometry( edge_radius, edge_radius, 1, 32 );
+  edge_geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler( Math.PI / 2, Math.PI, 0 ) ) );
   var edge_material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
   var cylinder = new THREE.Mesh( edge_geometry, edge_material );
-  cylinder.scale.y = height;
-  cylinder.position=half_way;
-  cylinder.position.x=half_way.x;
-  cylinder.position.y=half_way.y;
-  cylinder.position.z=half_way.z;
-  cylinder.rotation.z= Math.PI/2 - Math.atan2(orientation.y, orientation.x);
-  cylinder.rotation.y= Math.PI/2 + Math.atan2(orientation.x, orientation.z);
+
+  cylinder.scale.z = height;
+  cylinder.position.x=position.x;
+  cylinder.position.y=position.y;
+  cylinder.position.z=position.z;
+  cylinder.lookAt(pos2);
 
   scene.add( cylinder );
   edges.push(cylinder);
@@ -269,21 +268,14 @@ var render = function () {
     pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
 
     var height = pos1.distanceTo(pos2);
-    var half_way = new THREE.Vector3();
-    half_way.subVectors(pos2,pos1);
-    half_way.divideScalar(2);
-    half_way.add(pos1);
+    var position  = pos2.clone().add(pos1).divideScalar(2);
 
-    var orientation = new THREE.Vector3();
-    orientation.subVectors(pos2,pos1);
     cylinder=edges[i];
-    cylinder.scale.y = height;
-    cylinder.position=half_way;
-    cylinder.position.x=half_way.x;
-    cylinder.position.y=half_way.y;
-    cylinder.position.z=half_way.z;
-    cylinder.rotation.z= Math.PI/2 - Math.atan2(orientation.y, orientation.x);
-    cylinder.rotation.y= Math.PI/2 + Math.atan2(orientation.x, orientation.z);
+    cylinder.scale.z = height;
+    cylinder.position.x=position.x;
+    cylinder.position.y=position.y;
+    cylinder.position.z=position.z;
+    cylinder.lookAt(pos2);
   }
 
   // find intersections
