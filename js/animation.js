@@ -75,6 +75,13 @@ for(var i=1; i<n_planets+1; i++){
   paths.push(new ParticlePath( i, Math.ceil(duration/dt), 0xffffff));
 }
 
+//Saturn's ring
+var ring_geometry = new THREE.RingGeometry( 10*r, 13*r, 32 );
+
+var ring_material = new THREE.MeshBasicMaterial( { color: 0x663300, oppacity:0.5, side: THREE.DoubleSide } );
+var ring_mesh = new THREE.Mesh( ring_geometry, ring_material );
+ring_mesh.rotation.x = Math.PI/2;
+
 // set the scene size
 var WIDTH = window.innerWidth,//400,
   HEIGHT = window.innerHeight;//300;
@@ -141,6 +148,10 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   if (i==0) sphere.add(pointLight);
   else
   sphere.is_planet = true;
+  
+  if (i==6)
+    sphere.add( ring_mesh );
+
   scene.add(sphere);
   particles.push( sphere );
 }
@@ -212,6 +223,7 @@ cylinder_z.rotation.x = 3.1415/2;
 scene.add( cylinder_x );
 scene.add( cylinder_y );
 scene.add( cylinder_z );
+
 
 
 var pos,vel;
