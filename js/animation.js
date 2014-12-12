@@ -1,16 +1,48 @@
 var mouse = new THREE.Vector2(), INTERSECTED, CAM_FOLLOW_i;
-var mouse_clicked = false;
+var mouse_clicked = false, button_clicked = false;
 function onDocumentMouseMove( event ) {
   event.preventDefault();
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 function onDocumentMouseClick( event ) {
-  event.preventDefault();
+  // event.preventDefault();
   mouse_clicked = true;
 }
 document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 document.addEventListener( 'click', onDocumentMouseClick, false );
+
+ document.getElementById( "planet_1" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=1; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_2" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=2; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_3" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=3; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_4" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=4; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_5" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=5; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_6" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=6; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_7" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=7; button_clicked = true;
+  }, false );
+ document.getElementById( "planet_8" ).addEventListener( 'click', function() {
+    CAM_FOLLOW_i=8; button_clicked = true;
+  }, false );
+
+// for(var j=1; j<=8;j++){
+//   document.getElementById( "planet_" + j ).addEventListener( 'click', function() {
+//     // CAM_FOLLOW_i=i;
+//     alert(j);
+//   }, false );
+// }
 
 THREE.ImageUtils.crossOrigin = '';
 
@@ -298,7 +330,7 @@ var render = function () {
   // if (mouse_clicked && INTERSECTED){
   //   CAM_FOLLOW_i=INTERSECTED.particle_i;
   // }
-  if (mouse_clicked){
+  if (mouse_clicked && !button_clicked){
     if (INTERSECTED)
       CAM_FOLLOW_i=INTERSECTED.particle_i;
     else{
@@ -321,6 +353,7 @@ var render = function () {
   }
 
   raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+  button_clicked=false;
   mouse_clicked = false;
   
   requestAnimationFrame( render );
