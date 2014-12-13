@@ -165,3 +165,66 @@ var sphereMaterial =
 // two_ds_scene.insertEdge([4,0],4);
 
 
+    // edge from X to Y
+    var direction = new THREE.Vector3().subVectors( pointY, pointX );
+    var arrow = new THREE.ArrowHelper( direction, pointX );
+
+    // cylinder: radiusAtTop, radiusAtBottom, 
+    //     height, radiusSegments, heightSegments
+    var edgeGeometry = new THREE.CylinderGeometry( 2, 2, direction.length(), 6, 4 );
+
+    var edge = new THREE.Mesh( edgeGeometry, 
+        new THREE.MeshBasicMaterial( { color: 0x0000ff } ) );
+    edge.rotation = arrow.rotation.clone();
+    edge.position = new THREE.Vector3().addVectors( pointX, direction.multiplyScalar(0.5) );
+    return edge;
+
+
+
+
+
+
+    /* edge from X to Y */
+    var direction = new THREE.Vector3().subVectors( pointY, pointX );
+    var orientation = new THREE.Matrix4();
+    /* THREE.Object3D().up (=Y) default orientation for all objects */
+    orientation.lookAt(pointX, pointY, new THREE.Object3D().up);
+    /* rotation around axis X by -90 degrees 
+     * matches the default orientation Y 
+     * with the orientation of looking Z */
+    orientation.multiply(new THREE.Matrix4(1,0,0,0,
+                                            0,0,1,0, 
+                                            0,-1,0,0,
+                                            0,0,0,1));
+
+    /* cylinder: radiusAtTop, radiusAtBottom, 
+        height, radiusSegments, heightSegments */
+    var edgeGeometry = new THREE.CylinderGeometry( 2, 2, direction.length(), 8, 1);
+    var edge = new THREE.Mesh( edgeGeometry, 
+            new THREE.MeshBasicMaterial( { color: 0x0000ff } ) );
+
+    edge.applyMatrix(orientation)
+    edge.position = new THREE.Vector3().addVectors( pointX, direction.multiplyScalar(0.5) );
+    return edge;
+
+    http://stackoverflow.com/questions/15316127/three-js-line-vector-to-cylinder
+
+
+
+
+
+
+
+
+
+
+    var direction = new THREE.Vector3().subVectors(point2, point1);
+        var arrow = new THREE.ArrowHelper(direction.clone().normalize(), point1);
+
+        var rotation = new THREE.Vector3().setEulerFromQuaternion(arrow.quaternion);
+
+        var edgeGeometry = new THREE.CylinderGeometry( 2, 2, direction.length(), 10, 4 );
+
+        var edge = new THREE.Mesh(edgeGeometry, material);
+        edge.rotation = rotation.clone();
+        edge.position = new THREE.Vector3().addVectors(point1, direction.multiplyScalar(0.5));

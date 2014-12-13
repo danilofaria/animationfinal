@@ -114,11 +114,6 @@ var ring_material = new THREE.MeshBasicMaterial( { color: 0x663300, oppacity:0.5
 var ring_mesh = new THREE.Mesh( ring_geometry, ring_material );
 ring_mesh.rotation.x = Math.PI/2;
 
-// two_ds_scene.insertEdge([1,2],4);
-// two_ds_scene.insertEdge([2,3],4);
-// two_ds_scene.insertEdge([4,0],4);
-// two_ds_scene.insertEdge([7,6],4);
-
 // set the scene size
 var WIDTH = window.innerWidth,//400,
   HEIGHT = window.innerHeight;//300;
@@ -182,6 +177,7 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
   sphere.particle_i = i;
+
   if (i==0) sphere.add(pointLight);
   else
   sphere.is_planet = true;
@@ -193,36 +189,6 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   particles.push( sphere );
 }
 //End of particless initialization
-
-//Edges initialization  
-var edges = new Array(0);
-for (i = 0; i < two_ds_scene.edges.length; i++) {
-  var edge = two_ds_scene.edges[i];
-  var edge_radius = two_ds_scene.edges_radii[i];
-  var pos1 = two_ds_scene.getPosition(edge[0]);
-  var pos2 = two_ds_scene.getPosition(edge[1]);
-  pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
-  pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
-
-  var height = pos1.distanceTo(pos2);
-  var position  = pos2.clone().add(pos1).divideScalar(2);
-
-  var edge_geometry = new THREE.CylinderGeometry( edge_radius, edge_radius, 1, 32 );
-  edge_geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler( Math.PI / 2, Math.PI, 0 ) ) );
-  var edge_material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-  var cylinder = new THREE.Mesh( edge_geometry, edge_material );
-
-  cylinder.scale.z = height;
-  cylinder.position.x=position.x;
-  cylinder.position.y=position.y;
-  cylinder.position.z=position.z;
-  cylinder.lookAt(pos2);
-
-  scene.add( cylinder );
-  edges.push(cylinder);
-}
-//End of edges initialization
-
 
 //Paths initialization
 var path_geometries = []
@@ -239,6 +205,7 @@ for (var i=0; i<paths.length;i++){
 }
 //End of paths initialization
 
+//Axis across the sun
 var geometry_axis = new THREE.CylinderGeometry( 1, 1, 150, 32 );
 var material_x = new THREE.MeshBasicMaterial( {color: 0xddddff} );
 var material_y = new THREE.MeshBasicMaterial( {color: 0xaaaaff} );
@@ -254,7 +221,6 @@ cylinder_z.rotation.x = 3.1415/2;
 scene.add( cylinder_x );
 scene.add( cylinder_y );
 scene.add( cylinder_z );
-
 
 
 var pos,vel;
@@ -289,25 +255,6 @@ var render = function () {
     sphere.position.y=pos[1];
     sphere.position.z=pos[2];
     sphere.rotation.y += 0.01;
-  }
-
-  // Move edges
-  for (i = 0; i < two_ds_scene.edges.length; i++) {
-    var edge_info = two_ds_scene.edges[i];
-    var pos1 = two_ds_scene.getPosition(edge_info[0]);
-    var pos2 = two_ds_scene.getPosition(edge_info[1]);
-    pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
-    pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
-
-    var height = pos1.distanceTo(pos2);
-    var position  = pos2.clone().add(pos1).divideScalar(2);
-
-    cylinder=edges[i];
-    cylinder.scale.z = height;
-    cylinder.position.x=position.x;
-    cylinder.position.y=position.y;
-    cylinder.position.z=position.z;
-    cylinder.lookAt(pos2);
   }
 
   // find intersections

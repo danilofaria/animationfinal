@@ -113,6 +113,51 @@ GravitationalForce.prototype.addGradEToTotal = function(x,v,m,gradE){
 	return gradE;
 }
 
+
+function SpringForce(endpoints, k, l0, b) {
+	Force.call();
+	this.endpoints = endpoints;
+	this.k = k;
+	this.l0 = l0;
+	this.b = b;
+}
+SpringForce.prototype = new Force();
+SpringForce.prototype.constructor = SpringForce;
+
+SpringForce.prototype.addGradEToTotal = function(x,v,m,gradE){
+  	// Compute the elastic component
+  	var particle1 = this.endpoints[0];
+  	var particle2 = this.endpoints[1];
+	var x1=x.subset(math.index(particle1, [0, 3]));
+	var x2=x.subset(math.index(particle2, [0, 3]));
+	var v1=v.subset(math.index(particle1, [0, 3]));
+	var v2=v.subset(math.index(particle2, [0, 3]));
+	var nhat = math.subtract(x2,x1);
+	var l = math.norm(nhat,"fro");
+	//assert( l != 0.0 ); 
+	nhat = math.divide(nhat, l);
+ 
+  	var fdamp = nhat;
+	nhat = math.multiply(nhat, this.k*(l-this.l0));
+
+	var a = math.subtract(gradE.subset(math.index(particle1, [0, 3])), nhat);
+	var b = math.add(gradE.subset(math.index(particle2, [0, 3])), nhat);
+	gradE.subset(math.index(particle1, [0, 3]), a);
+	gradE.subset(math.index(particle2, [0, 3]), b);
+
+  	// Compute the internal damping
+  	// Remember we are computing minus the force here
+	a = this.b*math.dot(math.subtract(v2,v1).toArray()[0],fdamp.toArray()[0]);
+	fdamp = math.multiply(fdamp, a);
+
+	a = math.subtract(gradE.subset(math.index(particle1, [0, 3])), fdamp);
+	b = math.add(gradE.subset(math.index(particle2, [0, 3])), fdamp);
+	gradE.subset(math.index(particle1, [0, 3]), a);
+	gradE.subset(math.index(particle2, [0, 3]), b);
+	return gradE;
+}
+
+
 function SceneStepper() {
 }
 
@@ -135,11 +180,39 @@ ExplicitEuler.prototype.stepScene = function( scene, dt ){
 			F.subset(math.index(i,[0,3]), f);
 		}
 	}
-
 	var dx = math.multiply(v,dt);
 	var dv = math.multiply(F,dt);
 	scene.X =math.add(scene.X, dx);
 	scene.V =math.add(scene.V, dv);
+
+	return scene;
+}
+
+function SymplecticEuler() {
+}
+SymplecticEuler.prototype = new SceneStepper();
+SymplecticEuler.prototype.constructor = SymplecticEuler;
+SymplecticEuler.prototype.stepScene = function( scene, dt ){
+	var x = scene.X;
+	var v = scene.V;
+	var m = scene.M;
+
+	var F = math.zeros(scene.num_particles, 3);
+	F = scene.accumulateGradU(F);
+	F = math.multiply(F,-1);
+	for (i = 0; i < scene.num_particles; i++){
+		if (scene.isFixed[i]) F.subset(math.index(i,[0,3]),[0,0,0]);
+		else {
+			var f = math.divide(F.subset(math.index(i,[0,3])), m[i]);
+			F.subset(math.index(i,[0,3]), f);
+		}
+	}
+
+	var dv = math.multiply(F,dt);
+	scene.V =math.add(scene.V, dv);
+	v = scene.V;
+	var dx = math.multiply(v,dt);
+	scene.X =math.add(scene.X, dx);
 
 	return scene;
 }
