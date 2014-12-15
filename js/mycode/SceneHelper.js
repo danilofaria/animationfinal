@@ -226,7 +226,7 @@ function scene4(scale, dx, dy, dz, center){
 		var G = 1.18419;
 		var gravitational_force = new GravitationalForce(center,part,G);
 	  	forces.push(gravitational_force);
-		var buoyancy_force = new BuoyancyPlanetForce(part,center,500);
+		var buoyancy_force = new RadialBuoyancyForce(part,center,500);
 	    forces.push(buoyancy_force);
 
 		if (first_p == undefined) first_p = part;
@@ -363,7 +363,7 @@ function scene6(){
 	  // var duration = dist/10;
 	  // paths.push(new ParticlePath( planet, Math.ceil(duration/dt), rgb_v(ci,0,max_ci,1)));
       // ci = (ci+1) % max_ci
-	  var buoyancy_force = new BuoyancyPlanetForce(planet,center,500);
+	  var buoyancy_force = new RadialBuoyancyForce(planet,center,500);
 	  forces.push(buoyancy_force);
 	}
 

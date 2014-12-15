@@ -74,15 +74,15 @@ for(var i=0; i<n_planets+1; i++){
 }
 
 var G = 1.18419, M=331436;
-var two_ds_scene = new TwoDScene(n_planets+1);
+var three_d_scene = new ThreeDScene(n_planets+1);
 var explicit_euler = new ExplicitEuler();
 var dt = 0.005;
 
 //Sun
-two_ds_scene.setPosition(0, [0,0,0]);
-two_ds_scene.radii[0]=50;
-two_ds_scene.setM(0,M);
-two_ds_scene.isFixed[0] = true;
+three_d_scene.setPosition(0, [0,0,0]);
+three_d_scene.radii[0]=50;
+three_d_scene.setM(0,M);
+three_d_scene.isFixed[0] = true;
 
 //Other planets
 var offset = 50;
@@ -95,14 +95,14 @@ for(var i=1; i<n_planets+1; i++){
   var dist = data[i-1][0];
   var ca = data[i-1][2];
   var pos = [dist * Math.sin(ca * Math.PI/180), 0, dist * Math.cos(ca * Math.PI/180)]
-  two_ds_scene.setPosition(i, pos);
+  three_d_scene.setPosition(i, pos);
   var sign = (i % 2 == 0) ? 1 : -1;
-  two_ds_scene.setVelocity(i, [0,sign*Math.sqrt(G*M/dist),0]);
-  two_ds_scene.radii[i]=data[i-1][1];
-  two_ds_scene.setM(i,1);
-  two_ds_scene.isFixed[i] = false;
+  three_d_scene.setVelocity(i, [0,sign*Math.sqrt(G*M/dist),0]);
+  three_d_scene.radii[i]=data[i-1][1];
+  three_d_scene.setM(i,1);
+  three_d_scene.isFixed[i] = false;
   var gravitational_force = new GravitationalForce(0,i,G);
-  two_ds_scene.insertForce(gravitational_force);
+  three_d_scene.insertForce(gravitational_force);
   var duration = dist/10;
   paths.push(new ParticlePath( i, Math.ceil(duration/dt), 0xffffff));
 }
@@ -164,9 +164,9 @@ var pointLight =
 
 //Particles initialization  
 var particles = new Array(0);
-for (i = 0; i < two_ds_scene.num_particles; i++) {
-  var pos = two_ds_scene.getPosition(i);
-  radius = two_ds_scene.radii[i];
+for (i = 0; i < three_d_scene.num_particles; i++) {
+  var pos = three_d_scene.getPosition(i);
+  radius = three_d_scene.radii[i];
 
   var sphere = new THREE.Mesh(
     new THREE.SphereGeometry(
@@ -230,11 +230,11 @@ window.addEventListener( 'resize', onWindowResize, false );
 
 var pos,vel;
 var render = function () {
-  two_ds_scene = explicit_euler.stepScene(two_ds_scene, dt)
+  three_d_scene = explicit_euler.stepScene(three_d_scene, dt)
       
   // Paths update and rendering
   for (i = 0; i < paths.length; i++){
-    pos = two_ds_scene.getPosition(paths[i].particle_i);
+    pos = three_d_scene.getPosition(paths[i].particle_i);
     paths[i].addToPath(pos);
   }
   for (var i=0; i<paths.length;i++){
@@ -253,8 +253,8 @@ var render = function () {
   // End of paths update and rendering
 
   // Move particles
-  for (i = 0; i < two_ds_scene.num_particles; i++) {
-    var pos = two_ds_scene.getPosition(i);
+  for (i = 0; i < three_d_scene.num_particles; i++) {
+    var pos = three_d_scene.getPosition(i);
     var sphere = particles[i];
     sphere.position.x=pos[0];
     sphere.position.y=pos[1];
@@ -290,9 +290,9 @@ var render = function () {
     }
   }
   if(CAM_FOLLOW_i){
-    pos = two_ds_scene.getPosition(CAM_FOLLOW_i);
-    vel = two_ds_scene.getVelocity(CAM_FOLLOW_i);
-    radius = two_ds_scene.radii[CAM_FOLLOW_i];
+    pos = three_d_scene.getPosition(CAM_FOLLOW_i);
+    vel = three_d_scene.getVelocity(CAM_FOLLOW_i);
+    radius = three_d_scene.radii[CAM_FOLLOW_i];
     vel = new THREE.Vector3( vel[0], vel[1], vel[2] );
     vel = vel.normalize();
     camera.position.x = pos[0] -vel.x*radius*5;

@@ -2,7 +2,7 @@ var WIDTH, HEIGHT;
 var VIEW_ANGLE, ASPECT, NEAR, FAR;
 var scene, camera, renderer, dt, integrator;
 var controls;
-var two_ds_scene;
+var three_d_scene;
 var i,j,k;
 var edges = [];
 var particles = [];
@@ -15,7 +15,7 @@ var do_stuff_before_render = function(){};
 var reference;
 var show_particles, show_edges;
 var mouse = new THREE.Vector2();
-var INTERSECTED;
+var INTERSECTED, INTERSECTED_aux;
 var mouse_clicked = false, button_clicked = false, leftclick = true;
 var raycaster= new THREE.Raycaster();
 var bottom = -400;
@@ -67,26 +67,26 @@ document.body.appendChild( renderer.domElement );
 
 scene5();
 
-two_ds_scene = new TwoDScene(particle_count);
+three_d_scene = new ThreeDScene(particle_count);
 
 for(i=0;i<particle_count;i++){
-  two_ds_scene.setPosition(i, particles[i].pos);
-  two_ds_scene.setVelocity(i, particles[i].vel);
-  two_ds_scene.radii[i]= particles[i].radius;
-  two_ds_scene.setM(i, particles[i].m);
-  two_ds_scene.isFixed[i] = particles[i].isFixed;
+  three_d_scene.setPosition(i, particles[i].pos);
+  three_d_scene.setVelocity(i, particles[i].vel);
+  three_d_scene.radii[i]= particles[i].radius;
+  three_d_scene.setM(i, particles[i].m);
+  three_d_scene.isFixed[i] = particles[i].isFixed;
   particle_materials.push( particles[i].material );
   radii_scale.push(1);
 }
 
-original_radii = two_ds_scene.radii.slice(0);
+original_radii = three_d_scene.radii.slice(0);
 
 for(i=0;i<edge_count;i++){
-  two_ds_scene.insertEdge([edges[i].particle_i,edges[i].particle_j], edges[i].radius);
+  three_d_scene.insertEdge([edges[i].particle_i,edges[i].particle_j], edges[i].radius);
   edge_colors.push(edges[i].color);
 }
 
-two_ds_scene.forces=forces;
+three_d_scene.forces=forces;
 
 // Create an ambient light
 var light = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -95,9 +95,9 @@ scene.add( light );
 // set up the sphere vars
 var radius = 0.8, segments = 16, rings = 16;
 var particle_meshes = new Array(0);
-for (i = 0; i < two_ds_scene.num_particles; i++) {
-  var pos = two_ds_scene.getPosition(i);
-  radius = two_ds_scene.radii[i];
+for (i = 0; i < three_d_scene.num_particles; i++) {
+  var pos = three_d_scene.getPosition(i);
+  radius = three_d_scene.radii[i];
 
   var sphere = new THREE.Mesh(
     new THREE.SphereGeometry(
@@ -117,11 +117,11 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
 
 //Edges initialization  
 var edge_meshes = new Array(0);
-for (i = 0; i < two_ds_scene.edges.length; i++) {
-  var edge = two_ds_scene.edges[i];
-  var edge_radius = two_ds_scene.edges_radii[i];
-  var pos1 = two_ds_scene.getPosition(edge[0]);
-  var pos2 = two_ds_scene.getPosition(edge[1]);
+for (i = 0; i < three_d_scene.edges.length; i++) {
+  var edge = three_d_scene.edges[i];
+  var edge_radius = three_d_scene.edges_radii[i];
+  var pos1 = three_d_scene.getPosition(edge[0]);
+  var pos2 = three_d_scene.getPosition(edge[1]);
   pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
   pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
 
@@ -169,15 +169,15 @@ window.addEventListener( 'resize', onWindowResize, false );
 do_stuff_before_render();
 
 var render = function () {
-  two_ds_scene = integrator.stepScene(two_ds_scene, dt)
+  three_d_scene = integrator.stepScene(three_d_scene, dt)
 
   // Move particles
-  for (i = 0; i < two_ds_scene.num_particles; i++) {
-    var pos = two_ds_scene.getPosition(i);
-    var radius = two_ds_scene.radii[i];
+  for (i = 0; i < three_d_scene.num_particles; i++) {
+    var pos = three_d_scene.getPosition(i);
+    var radius = three_d_scene.radii[i];
     if ((pos[1]-radius) < bottom){
       pos[1] = bottom + radius;
-      two_ds_scene.setPosition(i, pos);}
+      three_d_scene.setPosition(i, pos);}
     var sphere = particle_meshes[i];
     sphere.position.x=pos[0];
     sphere.position.y=pos[1];
@@ -186,10 +186,10 @@ var render = function () {
   }
 
   // Move edges
-  for (i = 0; i < two_ds_scene.edges.length; i++) {
-    var edge_info = two_ds_scene.edges[i];
-    var pos1 = two_ds_scene.getPosition(edge_info[0]);
-    var pos2 = two_ds_scene.getPosition(edge_info[1]);
+  for (i = 0; i < three_d_scene.edges.length; i++) {
+    var edge_info = three_d_scene.edges[i];
+    var pos1 = three_d_scene.getPosition(edge_info[0]);
+    var pos2 = three_d_scene.getPosition(edge_info[1]);
     pos1 = new THREE.Vector3( pos1[0], pos1[1], pos1[2] );
     pos2 = new THREE.Vector3( pos2[0], pos2[1], pos2[2] );
 
@@ -207,7 +207,7 @@ var render = function () {
 
   // Paths update and rendering
   for (i = 0; i < paths.length; i++){
-    pos = two_ds_scene.getPosition(paths[i].particle_i);
+    pos = three_d_scene.getPosition(paths[i].particle_i);
     paths[i].addToPath(pos);
   }
   for (var i=0; i<paths.length;i++){
@@ -232,9 +232,11 @@ var render = function () {
   var intersects = raycaster.intersectObjects( scene.children );
   if ( intersects.length > 0 ) {
     if ( INTERSECTED != intersects[ 0 ].object ) {
+      INTERSECTED_aux = intersects[ 0 ].object;
+      if (!INTERSECTED_aux.is_particle && intersects.length > 1) INTERSECTED_aux = intersects[ 1 ].object;
       if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-        if ( intersects[ 0 ].object.is_particle){
-        INTERSECTED = intersects[ 0 ].object;
+        if ( INTERSECTED_aux.is_particle){
+        INTERSECTED = INTERSECTED_aux;
         INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
         INTERSECTED.material.emissive.setHex( 0xff0000 );
       } else {INTERSECTED=null;}
@@ -256,7 +258,7 @@ var render = function () {
         sphere.scale.y -= 0.1;
         sphere.scale.z -= 0.1;
         radii_scale[part_i] -= 0.1;}
-      two_ds_scene.radii[part_i] = original_radii[part_i]*radii_scale[part_i];
+      three_d_scene.radii[part_i] = original_radii[part_i]*radii_scale[part_i];
   }
   controls.update();
 

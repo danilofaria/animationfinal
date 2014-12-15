@@ -1,5 +1,5 @@
 // http://mathjs.org/docs/datatypes/matrices.html
-function TwoDScene(num_particles) {
+function ThreeDScene(num_particles) {
 	this.num_particles = num_particles;
 	this.X = math.zeros(num_particles, 3);
 	this.V = math.zeros(num_particles, 3);
@@ -11,40 +11,40 @@ function TwoDScene(num_particles) {
 	this.forces = new Array(0);
 }
 
-TwoDScene.prototype.setPosition = function (particle_i, pos) { 
+ThreeDScene.prototype.setPosition = function (particle_i, pos) { 
 	this.X.subset(math.index(particle_i, [0, 3]), pos);
 };
 
-TwoDScene.prototype.getPosition = function (particle_i) { 
+ThreeDScene.prototype.getPosition = function (particle_i) { 
 	return this.X.subset(math.index(particle_i, [0, 3])).toArray()[0];
 }
 
-TwoDScene.prototype.setVelocity = function (particle_i, vel) { 
+ThreeDScene.prototype.setVelocity = function (particle_i, vel) { 
 	this.V.subset(math.index(particle_i, [0, 3]), vel);
 };
 
-TwoDScene.prototype.getVelocity = function (particle_i) { 
+ThreeDScene.prototype.getVelocity = function (particle_i) { 
 	return this.V.subset(math.index(particle_i, [0, 3])).toArray()[0];
 };
 
-TwoDScene.prototype.setM = function (particle_i, m) { 
+ThreeDScene.prototype.setM = function (particle_i, m) { 
 	this.M[particle_i] = m;
 };
 
-TwoDScene.prototype.getM = function (particle_i) { 
+ThreeDScene.prototype.getM = function (particle_i) { 
 	return this.M[particle_i];
 };
 
-TwoDScene.prototype.insertForce = function (newForce) { 
+ThreeDScene.prototype.insertForce = function (newForce) { 
 	this.forces.push(newForce);
 };
 
-TwoDScene.prototype.insertEdge = function (edge, radius) { 
+ThreeDScene.prototype.insertEdge = function (edge, radius) { 
 	this.edges.push(edge);
 	this.edges_radii.push(radius);
 };
 
-TwoDScene.prototype.accumulateGradU = function (F) { 
+ThreeDScene.prototype.accumulateGradU = function (F) { 
   	for(var i = 0; i < this.forces.length ; i++ ) 
   		F = this.forces[i].addGradEToTotal( this.X, this.V, this.M, F , this.radii);
   	return F;
@@ -206,15 +206,15 @@ BuoyancyForce.prototype.addGradEToTotal = function(x, v, m, gradE, radii){
 
 
 //For surface defined by normal n (pointing inwards of liquid) and point p
-function BuoyancyPlanetForce(particle_i, particle_planet_i, density) {
+function RadialBuoyancyForce(particle_i, particle_planet_i, density) {
 	Force.call();
 	this.particle_i = particle_i;
 	this.particle_planet_i = particle_planet_i;
 	this.density = density;
 }
-BuoyancyPlanetForce.prototype = new Force();
-BuoyancyPlanetForce.prototype.constructor = BuoyancyPlanetForce;
-BuoyancyPlanetForce.prototype.addGradEToTotal = function(x, v, m, gradE, radii){
+RadialBuoyancyForce.prototype = new Force();
+RadialBuoyancyForce.prototype.constructor = RadialBuoyancyForce;
+RadialBuoyancyForce.prototype.addGradEToTotal = function(x, v, m, gradE, radii){
   	// Compute the elastic component
 	// gradE.subset(math.index(this.particle_i, [0, 3]), [0,0,0]);
 	// return gradE;
