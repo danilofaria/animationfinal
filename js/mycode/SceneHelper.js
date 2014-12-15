@@ -22,8 +22,8 @@ function Edge(particle_i, particle_j, radius, color){
 	edge_count++;
 }
 
-var default_material = new THREE.MeshNormalMaterial( );
-// var default_material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
+// var default_material = new THREE.MeshNormalMaterial(  );
+var default_material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
 // var default_material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } );
 // var default_material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } );
 // var default_material = new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, emissive: 0xff0000, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } );
@@ -199,9 +199,6 @@ function scene41(){
 
 
 function scene4(scale, dx, dy, dz, center){
-
-	// camera.position.z = 200;
-
 	// dt=0.05
 	var first_p = undefined; 
 	var last_p = undefined;
@@ -325,28 +322,27 @@ function scene5(){
 
 
 function scene6(){
-
+	show_edges=false;
 	var center_material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } );
 	var core_material = new THREE.MeshLambertMaterial( { color: 0x666666, emissive: 0xff0000, ambient: 0x000000, shading: THREE.SmoothShading } );
 	particle_materials.push(center_material);
 	particle_materials.push(core_material);
-	// scene2();
-	camera.position.z = 100;
-	dt=0.002;
-	// var data = [[150-offset, 1*r, 0],[160-offset, 1*r, 30],[170-offset, 1*r, 45],[180-offset, 0.5*r, 125],
-	// [230-offset, 10*r, 200],[260-offset, 9*r, 100],[290-offset, 4*r, 300],[310-offset, 4*r, 250]]
+
+	camera.position.z = 40;
+	dt=0.005;
 	var G = 1.18419, M=331436, R= 10, r=1;
-	// var paths = [];
+	bottom_radius = R/2;
 	var center = new_particle([0,0,0],[0,0,0],M,R,true);
 	new_particle([0,0,0],[0,0,0],1,R/2,true);
-	var n_planets=240;
+	var n_planets=200;
 
 	var ci = 0
 	var max_ci = n_planets	
 
-	scene4(0.1,0,15,0,center);
+	// scene4(0.05,0,15,0,center);
+	// scene4(0.05,0,-15,0,center);
 	for(var i=1; i<n_planets+1; i++){
-	  var dist = 10+i*0.25;
+	  var dist = R+i*0.25;
 	  var p0 = new THREE.Vector3( dist, 0, 0 );
 	  var ca1 = Math.random() * 360;
 	  var ca2 = Math.random() * 360;
@@ -361,15 +357,14 @@ function scene6(){
 	  // v0.applyEuler(a);
 	  // var vel = [v0.x, v0.y, v0.z]
 	  var m = 1;
-	  var planet = new_particle(pos, vel, m,r, false);
+	  var planet = new_particle(pos, vel, m,r, false, new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading }  ));
 	  var gravitational_force = new GravitationalForce(center,planet,G);
 	  forces.push(gravitational_force);
 	  // var duration = dist/10;
 	  // paths.push(new ParticlePath( planet, Math.ceil(duration/dt), rgb_v(ci,0,max_ci,1)));
-   //    ci = (ci+1) % max_ci
+      // ci = (ci+1) % max_ci
 	  var buoyancy_force = new BuoyancyPlanetForce(planet,center,500);
 	  forces.push(buoyancy_force);
-
 	}
 
 }

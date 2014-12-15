@@ -183,7 +183,6 @@ var render = function () {
     sphere.position.y=pos[1];
     sphere.position.z=pos[2];
     sphere.visible=show_particles;
-
   }
 
   // Move edges
