@@ -16,6 +16,21 @@ var reference;
 var show_particles, show_edges;
 THREE.ImageUtils.crossOrigin = '';
 
+document.getElementById( "show_particles" ).addEventListener( 'click', function() {
+    show_particles = true;
+    show_edges = false;
+}, false );
+
+document.getElementById( "show_edges" ).addEventListener( 'click', function() {
+    show_particles = false;
+    show_edges = true;
+}, false );
+
+document.getElementById( "show_both" ).addEventListener( 'click', function() {
+    show_edges = true;
+    show_particles = true;
+}, false );
+
 // set the scene size
 WIDTH = window.innerWidth,//400,
   HEIGHT = window.innerHeight;//300;
@@ -43,7 +58,7 @@ scene.add(reference);
 show_particles = true, show_edges = true;
 document.body.appendChild( renderer.domElement );
 
-scene3();
+scene41();
 
 two_ds_scene = new TwoDScene(particle_count);
 

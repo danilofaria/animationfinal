@@ -228,3 +228,52 @@ var sphereMaterial =
         var edge = new THREE.Mesh(edgeGeometry, material);
         edge.rotation = rotation.clone();
         edge.position = new THREE.Vector3().addVectors(point1, direction.multiplyScalar(0.5));
+
+
+
+
+
+
+
+
+
+
+  // var imageCanvas = document.createElement( "canvas" ),
+  //  context = imageCanvas.getContext( "2d" );
+  // imageCanvas.width = imageCanvas.height = 128;
+  // context.fillStyle = "#444";
+  // context.fillRect( 0, 0, 128, 128 );
+  // context.fillStyle = "#fff";
+  // context.fillRect( 0, 0, 64, 64);
+  // context.fillRect( 64, 64, 64, 64 );
+  // var textureCanvas = new THREE.Texture( imageCanvas, THREE.UVMapping, THREE.RepeatWrapping, THREE.RepeatWrapping );
+  //  materialCanvas = new THREE.MeshBasicMaterial( { map: textureCanvas } );
+  // textureCanvas.needsUpdate = true;
+  // textureCanvas.repeat.set( 100, 100 );
+  // var geometry = new THREE.PlaneBufferGeometry( 100, 100 );
+
+  // var meshCanvas = new THREE.Mesh( geometry, materialCanvas );
+  // meshCanvas.rotation.x = - Math.PI / 2;
+  // meshCanvas.scale.set( 100, 100, 100 );
+  // meshCanvas.position.y=-100;
+  // scene.add(meshCanvas);
+
+  // var start = Date.now();
+  // do_stuff=function(){
+  //     var timer = Date.now() - start;
+  //  // reference.position.y = Math.sin( timer * 0.002 ) * 150;
+  //  reference.rotation.x = timer * 0.0003;
+  //  reference.rotation.z = timer * 0.0002;
+  // }
+
+
+  // Ground
+  var plane = new THREE.Mesh(
+    new THREE.PlaneBufferGeometry( 2000, 2000 ),
+    new THREE.MeshPhongMaterial( { ambient: 0x999999, color: 0x999999, specular: 0x101010 } )
+  );
+  plane.rotation.x = -Math.PI/2;
+  plane.position.y = -200;
+  scene.add( plane );
+
+  plane.receiveShadow = true;

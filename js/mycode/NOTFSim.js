@@ -45,8 +45,8 @@ TwoDScene.prototype.insertEdge = function (edge, radius) {
 };
 
 TwoDScene.prototype.accumulateGradU = function (F) { 
-  	for( i = 0; i < this.forces.length ; i++ ) 
-  		F = this.forces[i].addGradEToTotal( this.X, this.V, this.M, F );
+  	for(var i = 0; i < this.forces.length ; i++ ) 
+  		F = this.forces[i].addGradEToTotal( this.X, this.V, this.M, F , this.radii);
   	return F;
 };
 
@@ -79,7 +79,7 @@ SimpleGravityForce.prototype = new Force();
 SimpleGravityForce.prototype.constructor = SimpleGravityForce;
 
 SimpleGravityForce.prototype.addGradEToTotal = function(x,v,m,gradE){
-  for( i = 0; i < x.size()[0]; i++ ) {
+  for(var i = 0; i < x.size()[0]; i++ ) {
   	var grad_e = math.multiply(this.gravity, -m[i]);
 	grad_e = math.add(math.squeeze(gradE.subset(math.index(i, [0, 3]))), grad_e);
 	gradE.subset(math.index(i, [0, 3]), grad_e)
@@ -120,6 +120,7 @@ function SpringForce(endpoints, k, l0, b) {
 	this.k = k;
 	this.l0 = l0;
 	this.b = b;
+	this.isBungee = false;
 }
 SpringForce.prototype = new Force();
 SpringForce.prototype.constructor = SpringForce;
@@ -136,7 +137,9 @@ SpringForce.prototype.addGradEToTotal = function(x,v,m,gradE){
 	var l = math.norm(nhat,"fro");
 	//assert( l != 0.0 ); 
 	nhat = math.divide(nhat, l);
- 
+
+ 	if (this.isBungee && l < this.l0) return gradE;
+
   	var fdamp = nhat;
 	nhat = math.multiply(nhat, this.k*(l-this.l0));
 
@@ -157,6 +160,98 @@ SpringForce.prototype.addGradEToTotal = function(x,v,m,gradE){
 	return gradE;
 }
 
+//For surface defined by normal n (pointing inwards of liquid) and point p
+function BuoyancyForce(particle_i, n, p, density) {
+	Force.call();
+	this.particle_i = particle_i;
+	this.n = n;
+	this.p = p;
+	this.density = density;
+}
+BuoyancyForce.prototype = new Force();
+BuoyancyForce.prototype.constructor = BuoyancyForce;
+BuoyancyForce.prototype.addGradEToTotal = function(x, v, m, gradE, radii){
+  	// Compute the elastic component
+	// gradE.subset(math.index(this.particle_i, [0, 3]), [0,0,0]);
+	// return gradE;
+
+	var x1=x.subset(math.index(this.particle_i, [0, 3]));
+	var v1=v.subset(math.index(this.particle_i, [0, 3]));
+
+	var radius = radii[this.particle_i];
+	var volume = (radius*2)*(radius*2);
+	var d = math.subtract(x1.toArray()[0], this.p);
+	d = math.dot(d, this.n);
+	
+	a = math.dot(v1.toArray()[0],this.n);
+	
+	if (d <= -radius) return gradE;
+
+	if (d >= radius){
+		var magnitude = this.density*volume;
+	} else{
+		magnitude=0;
+		var magnitude = this.density*volume*(d+radius)/(2*radius);
+	}
+
+	B=1;
+	if(a < 0) B=0.8;
+	var buoyancy = math.multiply(this.n, B*magnitude);
+
+	a = math.add(gradE.subset(math.index(this.particle_i, [0, 3])).toArray()[0], buoyancy);
+	gradE.subset(math.index(this.particle_i, [0, 3]), a);
+
+	return gradE;
+}
+
+
+//For surface defined by normal n (pointing inwards of liquid) and point p
+function BuoyancyPlanetForce(particle_i, particle_planet_i, density) {
+	Force.call();
+	this.particle_i = particle_i;
+	this.particle_planet_i = particle_planet_i;
+	this.density = density;
+}
+BuoyancyPlanetForce.prototype = new Force();
+BuoyancyPlanetForce.prototype.constructor = BuoyancyPlanetForce;
+BuoyancyPlanetForce.prototype.addGradEToTotal = function(x, v, m, gradE, radii){
+  	// Compute the elastic component
+	// gradE.subset(math.index(this.particle_i, [0, 3]), [0,0,0]);
+	// return gradE;
+
+	var x1=x.subset(math.index(this.particle_i, [0, 3]));
+	var v1=v.subset(math.index(this.particle_i, [0, 3]));
+
+	var x2=x.subset(math.index(this.particle_planet_i, [0, 3]));
+	var v2=v.subset(math.index(this.particle_planet_i, [0, 3]));
+
+	var radius1 = radii[this.particle_i];
+	var radius2 = radii[this.particle_planet_i];
+	var volume = (radius1*2)*(radius1*2);
+
+	var n = math.subtract(x2,x1);
+	var l = math.norm(n,"fro");
+	var d = radius2-l;
+	a = math.dot(v1.toArray()[0], n.toArray()[0]);
+	
+	if (d <= -radius1) return gradE;
+
+	if (d >= radius1){
+		var magnitude = this.density*volume;
+	} else{
+		magnitude=0;
+		var magnitude = this.density*volume*(d+radius1)/(2*radius1);
+	}
+
+	B=1;
+	if(a < 0) B=0.8;
+	var buoyancy = math.multiply(n, B*magnitude);
+
+	a = math.add(gradE.subset(math.index(this.particle_i, [0, 3])).toArray()[0], buoyancy.toArray()[0]);
+	gradE.subset(math.index(this.particle_i, [0, 3]), a);
+
+	return gradE;
+}
 
 function SceneStepper() {
 }
