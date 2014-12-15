@@ -43,7 +43,11 @@ scene.add(reference);
 show_particles = true, show_edges = true;
 document.body.appendChild( renderer.domElement );
 
-scene3();
+  renderer.shadowMapEnabled = true;
+  renderer.shadowMapType = THREE.PCFSoftShadowMap;
+  renderer.shadowMapCullFace = THREE.CullFaceBack;
+
+scene5();
 
 two_ds_scene = new TwoDScene(particle_count);
 
@@ -82,6 +86,7 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.x=pos[0];
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
+  sphere.castShadow = true;
   // add the sphere to the scene
   reference.add(sphere);
   particle_meshes.push( sphere );

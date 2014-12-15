@@ -14,6 +14,24 @@ var do_stuff = function(){};
 var do_stuff_before_render = function(){};
 var reference;
 var show_particles, show_edges;
+var mouse = new THREE.Vector2();
+var INTERSECTED;
+var mouse_clicked = false, button_clicked = false, leftclick = true;
+var raycaster= new THREE.Raycaster();
+var bottom = -400;
+var original_radii=[];
+var radii_scale=[];
+function onDocumentMouseMove( event ) {
+  event.preventDefault();
+  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+$("body").mousedown(function(ev){
+  leftclick=true;
+  if(ev.which == 3) leftclick=false;
+  mouse_clicked = true;
+});
+document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 THREE.ImageUtils.crossOrigin = '';
 
 // set the scene size
@@ -43,7 +61,11 @@ scene.add(reference);
 show_particles = true, show_edges = true;
 document.body.appendChild( renderer.domElement );
 
-scene3();
+  renderer.shadowMapEnabled = true;
+  renderer.shadowMapType = THREE.PCFSoftShadowMap;
+  renderer.shadowMapCullFace = THREE.CullFaceBack;
+
+scene5();
 
 two_ds_scene = new TwoDScene(particle_count);
 
@@ -54,7 +76,10 @@ for(i=0;i<particle_count;i++){
   two_ds_scene.setM(i, particles[i].m);
   two_ds_scene.isFixed[i] = particles[i].isFixed;
   particle_materials.push( particles[i].material );
+  radii_scale.push(1);
 }
+
+original_radii = two_ds_scene.radii.slice(0);
 
 for(i=0;i<edge_count;i++){
   two_ds_scene.insertEdge([edges[i].particle_i,edges[i].particle_j], edges[i].radius);
@@ -82,8 +107,11 @@ for (i = 0; i < two_ds_scene.num_particles; i++) {
   sphere.position.x=pos[0];
   sphere.position.y=pos[1];
   sphere.position.z=pos[2];
+  sphere.castShadow = true;
+  sphere.is_particle = true;
+  sphere.particle_i = i;
   // add the sphere to the scene
-  reference.add(sphere);
+  scene.add(sphere);
   particle_meshes.push( sphere );
 }
 
@@ -112,7 +140,7 @@ for (i = 0; i < two_ds_scene.edges.length; i++) {
   cylinder.position.z=position.z;
   cylinder.lookAt(pos2);
 
-  reference.add( cylinder );
+  scene.add( cylinder );
   edge_meshes.push(cylinder);
 }
 //End of edges initialization
@@ -128,7 +156,7 @@ for (var i=0; i<paths.length;i++){
     geometry.vertices.push(new THREE.Vector3( 0, 0, 0 ));
   path_geometries.push(geometry);
   var line = new THREE.Line( geometry, material );
-  reference.add( line );
+  scene.add( line );
 }
 //End of paths initialization
 
@@ -146,6 +174,10 @@ var render = function () {
   // Move particles
   for (i = 0; i < two_ds_scene.num_particles; i++) {
     var pos = two_ds_scene.getPosition(i);
+    var radius = two_ds_scene.radii[i];
+    if ((pos[1]-radius) < bottom){
+      pos[1] = bottom + radius;
+      two_ds_scene.setPosition(i, pos);}
     var sphere = particle_meshes[i];
     sphere.position.x=pos[0];
     sphere.position.y=pos[1];
@@ -194,8 +226,46 @@ var render = function () {
   }
   // End of paths update and rendering
 
-  do_stuff();
+
+  // find intersections
+  var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+  raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+  var intersects = raycaster.intersectObjects( scene.children );
+  if ( intersects.length > 0 ) {
+    if ( INTERSECTED != intersects[ 0 ].object ) {
+      if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+        if ( intersects[ 0 ].object.is_particle){
+        INTERSECTED = intersects[ 0 ].object;
+        INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+        INTERSECTED.material.emissive.setHex( 0xff0000 );
+      } else {INTERSECTED=null;}
+    }
+  } else {
+    if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+    INTERSECTED = null;
+  }
+  if (mouse_clicked && !button_clicked && INTERSECTED){
+      var part_i = INTERSECTED.particle_i;
+      var sphere = particle_meshes[part_i];
+      if (leftclick){
+        sphere.scale.x += 0.1;
+        sphere.scale.y += 0.1;
+        sphere.scale.z += 0.1;
+        radii_scale[part_i] += 0.1;}
+      else{
+        sphere.scale.x -= 0.1;
+        sphere.scale.y -= 0.1;
+        sphere.scale.z -= 0.1;
+        radii_scale[part_i] -= 0.1;}
+      two_ds_scene.radii[part_i] = original_radii[part_i]*radii_scale[part_i];
+  }
   controls.update();
+
+  raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+  button_clicked=false;
+  mouse_clicked = false;
+
+  do_stuff();
   requestAnimationFrame( render );
   renderer.render(scene, camera);
 };

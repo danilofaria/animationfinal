@@ -146,7 +146,7 @@ for (i = 0; i < two_ds_scene.edges.length; i++) {
 var path_geometries = []
 for (var i=0; i<paths.length;i++){
   var material = new THREE.LineBasicMaterial({
-    color: paths[i].color
+    color: paths[i].color, opacity: 1, linewidth: 10 
   });
   var geometry = new THREE.Geometry();
   for (var j=0;j< paths[i].max_list_size ;j++)
@@ -236,9 +236,6 @@ var render = function () {
     if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
     INTERSECTED = null;
   }
-  // if (mouse_clicked && INTERSECTED){
-  //   CAM_FOLLOW_i=INTERSECTED.particle_i;
-  // }
   if (mouse_clicked && !button_clicked){
     if (INTERSECTED)
       CAM_FOLLOW_i=INTERSECTED.particle_i;

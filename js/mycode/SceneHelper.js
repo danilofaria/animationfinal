@@ -22,11 +22,12 @@ function Edge(particle_i, particle_j, radius, color){
 	edge_count++;
 }
 
-// var default_material = new THREE.MeshNormalMaterial( );
-var default_material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
+var default_material = new THREE.MeshNormalMaterial( );
+// var default_material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
 // var default_material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } );
 // var default_material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } );
 // var default_material = new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, emissive: 0xff0000, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } );
+// var default_material = new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, emissive: 0x00ff00, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } );
 
 // var default_material = new THREE.MeshLambertMaterial( { color: 0xdddddd, shading: THREE.FlatShading } );
 // var default_material = new THREE.MeshPhongMaterial( { ambient: 0x030303, color: 0xdddddd, specular: 0x009900, shininess: 30, shading: THREE.FlatShading } );
@@ -245,36 +246,68 @@ function scene4(scale, dx, dy, dz, center){
 	edges.push(new Edge(first_p,last_p, scale*4, rgb_v(ci,0,max_ci,1)));
 }
 
+
+
+
 function scene5(){
-	scene4()
-	dt=0.5
-	camera.position.y = 200;
-	camera.position.z = 200;
+	dt=0.5;
+	camera.position.y = 500;
+	camera.position.z = 500;
+
+	//Lights
+	var directionalLight = new THREE.DirectionalLight( 0xffffff, 1.35 );
+	directionalLight.position.set( 100, 300, 0 )
+	scene.add( directionalLight );
+	directionalLight.castShadow = true;
+	var d = 1000;
+	directionalLight.shadowCameraLeft = -d;
+	directionalLight.shadowCameraRight = d;
+	directionalLight.shadowCameraTop = d;
+	directionalLight.shadowCameraBottom = -d;
+	directionalLight.shadowCameraNear = 1;
+	directionalLight.shadowCameraFar = 4000;
+	directionalLight.shadowMapWidth = 1024;
+	directionalLight.shadowMapHeight = 1024;
+	directionalLight.shadowBias = -0.005;
+	directionalLight.shadowDarkness = .7;
 
 	var simple_gravity_force = new SimpleGravityForce([0,-10,0]);
 	forces.push(simple_gravity_force);
-	var part = new_particle([0,100,0], [0,0,0], 3200, 100, false);
-	var part2 = new_particle([200,300,0], [0,0,0], 3200, 100, false);
-	var buoyancy_force = new BuoyancyForce(part,[0,-1,0],[0,0,0],1.6);
-	forces.push(buoyancy_force);
-	var buoyancy_force = new BuoyancyForce(part2,[0,-1,0],[0,0,0],1.6);
-	forces.push(buoyancy_force);
+	
+	var n = 20;
+	for(var i=-n/2;i<n/2;i++){
+		for(var j=-n/2;j<n/2;j++){
+		var height = 100+200*Math.sin((2*Math.PI*i)/n);
+		var part = new_particle([i*300, 100+height, j*300], [0,0,0], 3200, 100, false, new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x666666, emissive: 0x00ff00, ambient: 0x000000, shininess: 10, shading: THREE.SmoothShading, opacity: 0.9, transparent: true } ));
+		var buoyancy_force = new BuoyancyForce(part,[0,-1,0],[0,0,0],1.6);
+		forces.push(buoyancy_force);
+		}
+	}
 
+	//water
 	var worldWidth = 128, worldDepth = 128,
 	worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
-	var water_geometry = new THREE.PlaneGeometry( 20000, 20000, worldWidth - 1, worldDepth - 1 );
+	var water_geometry = new THREE.PlaneGeometry( 10000, 10000, worldWidth - 1, worldDepth - 1 );
 	water_geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 	water_geometry.computeFaceNormals();
 	water_geometry.computeVertexNormals();
-
 	var texture = THREE.ImageUtils.loadTexture( "https://dl.dropboxusercontent.com/u/25861113/planet_textures/water.jpg" );
 	texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 	texture.repeat.set( 5, 5 );
-
-	material = new THREE.MeshBasicMaterial( { color: 0x0044ff, map: texture, opacity: 0.9, transparent: true,blending: THREE.AdditiveBlending } );
+	material = new THREE.MeshBasicMaterial( { color: 0x0044ff, map: texture, opacity: 0.9, transparent: true} );
 	water_mesh = new THREE.Mesh( water_geometry, material );
 	water_mesh.position.y=0;
 	scene.add( water_mesh );
+
+	// Ground
+	var plane = new THREE.Mesh(
+	    new THREE.PlaneBufferGeometry( 10000, 10000 ),
+	    new THREE.MeshPhongMaterial( { ambient: 0x999999, color: 0x999999, specular: 0x101010 } )
+	  );
+	plane.rotation.x = -Math.PI/2;
+	plane.position.y = -400;
+	scene.add( plane );
+	plane.receiveShadow = true;
 
 
     var clock = new THREE.Clock();
@@ -311,7 +344,7 @@ function scene6(){
 	var ci = 0
 	var max_ci = n_planets	
 
-	// scene4(0.1,0,15,0,center);
+	scene4(0.1,0,15,0,center);
 	for(var i=1; i<n_planets+1; i++){
 	  var dist = 10+i*0.25;
 	  var p0 = new THREE.Vector3( dist, 0, 0 );
