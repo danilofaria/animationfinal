@@ -75,10 +75,8 @@
             <h3>Columbia University, The Fu Foundation School of Engineering and Applied Science</h3>
             <h3>Student: Danilo Faria (df2553)</h3>
             <p> 
-
-            I made use of the <a href="http://threejs.org/">Three.js</a> library to render my scenes, but I coded all the physics and program logics from scratch. This project is my first experience with Three.js. The code I implemented is in the folder "/js/mycode/".
-            The physics, integrators and scene class are in the file NOTFSim.js (90125 Simulator).
-
+        For this project I implemented the physics for simple gravity, gravitational force, spring force, buoyancy force and radial buoyancy force all in three dimensions. I also coded 5 different interactive experiences ("scenes") that make use of the aforementioned forces. I used the <a href="http://threejs.org/">Three.js</a> library to render the scenes, but I coded all of the physics and program logic from scratch. This project is my first experience with Three.js. The code I implemented is in the folder "/js/mycode/". The physics, integrators and scene class are in the file NOTFSim.js (90125 Simulator). The other files in this folder take care of rendering, user interaction, program flow, etc. Note that scenes 1 and 4 make use of textures that are loaded from the internet and therefore need an internet connection to be rendered properly.The reason I didn't load them locally is that the browser won't allow that for security reasons.
+            </p> 
         </header>
 
         <hr>
@@ -86,7 +84,6 @@
         <div class="row">
             <div class="col-lg-12">
                 <h1 class="page-header">Scenes
-                    <small>Secondary Text</small>
                 </h1>
             </div>
         </div>
@@ -120,7 +117,7 @@
             <div class="col-md-5" >
                 <h3>Scene Two</h3>
                 <h4>Gravity and Spring</h4>
-                <p>In this scene you can see several "planets" going in random directions around a center body. The center body consists of a bunch of particles connected by springs to one central particle.</p>
+                <p>In this scene you can see several "planets" going in random directions around a center body. The center body consists of a bunch of particles connected by springs to one central particle. Spring force was also implemented based on previous course experience.</p>
                 <a class="btn btn-primary" href="gravity.html">View Scene <span class="glyphicon glyphicon-chevron-right"></span></a>
             </div>
         </div>
@@ -157,7 +154,8 @@
             <div class="col-md-5" >
                 <h3>Scene Four</h3>
                 <h4>Buoyancy</h4>
-                <p>Several particles floating on water because of buoyancy forces that balance out gravity.</p>
+                <p>Several balls floating on water because of buoyancy forces that balance out gravity. User is able to inflate or deflate the balls while maintaining their weights, such that the balls will float or sink accordingly. Buoyancy force was implemented based on the book <a href="http://www.amazon.com/Game-Physics-Engine-Development-Commercial-Grade/dp/0123819768/">Game Physics Engine Development</a>. However, the book only considers the case of an surface on the ZX plane and my implementation generalizes for any plane defined by a point and a normal vector.
+                </p>
                 <a class="btn btn-primary" href="buoyancy.html">View Scene <span class="glyphicon glyphicon-chevron-right"></span></a>
             </div>
         </div>
@@ -174,8 +172,8 @@
             </div>
             <div class="col-md-5">
                 <h3>Scene Five</h3>
-                <h4>Planet Buoyancy</h4>
-                <p>A simulation of planet covered in liquid while attracting several other bodies in its direction through gravity until the bodies begin to float on the surface of the planet.</p>
+                <h4>Radial Buoyancy</h4>
+                <p>A simulation of a planet covered in liquid while attracting several other bodies in its direction through gravity until the bodies begin to float on the surface of the planet. Like in the previous scene, the user can control the volume of the balls and make them sink or float. For this I implemented radial buoyancy force that considers the surface to be some sphere with a defined radius.</p>
                 <a class="btn btn-primary" href="radial_buoyancy.html">View Scene <span class="glyphicon glyphicon-chevron-right"></span></a>
             </div>
         </div>

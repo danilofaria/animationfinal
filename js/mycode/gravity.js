@@ -146,7 +146,7 @@ for (i = 0; i < three_d_scene.edges.length; i++) {
 var path_geometries = []
 for (var i=0; i<paths.length;i++){
   var material = new THREE.LineBasicMaterial({
-    color: paths[i].color, opacity: 1, linewidth: 10 
+    color: paths[i].color//, opacity: 1, linewidth: 10 
   });
   var geometry = new THREE.Geometry();
   for (var j=0;j< paths[i].max_list_size ;j++)
